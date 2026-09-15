@@ -554,8 +554,6 @@ const UI = {
     dialogueIntro:"Read the dialogue below. Try reading it aloud — with a partner, or all the parts yourself.",
     tapToFlip:"Tap the card to flip", of:"of", next:"Next", finish:"Finish", checkAnswer:"Check", tryAgain:"Try Again", playAudio:"Play sentence",
     stopAudio:"Stop", slower:"Slower", faster:"Faster",
-    voiceDownloading:"Downloading natural voice (one-time, ~80MB)…", voiceReady:"Natural voice ready",
-    voiceFallback:"Natural voice unavailable right now — using standard voice",
     wellDone:"✓ Well done — here's the full sentence:", hereIsTheCorrection:"Here's the correction — read it, then tap Next:",
     tapLineToTranslate:"Tap a line to see its translation, tap again to hide it. Double-tap any line to reveal the whole dialogue.",
     playDialogue:"▶ Play Dialogue", playingDialogue:"⏹ Stop",
@@ -599,8 +597,6 @@ const UI = {
     dialogueIntro:"گفتگوی زیر را بخوانید. سعی کنید آن را با صدای بلند بخوانید — با یک همراه، یا تمام نقش‌ها را خودتان بخوانید.",
     tapToFlip:"روی کارت لمس کنید", of:"از", next:"بعدی", finish:"پایان", checkAnswer:"بررسی", tryAgain:"دوباره تلاش کنید", playAudio:"پخش جمله",
     stopAudio:"توقف", slower:"آهسته‌تر", faster:"سریع‌تر",
-    voiceDownloading:"در حال دانلود صدای طبیعی (یک‌بار، حدود ۸۰ مگابایت)…", voiceReady:"صدای طبیعی آماده است",
-    voiceFallback:"صدای طبیعی اکنون در دسترس نیست — از صدای معمولی استفاده می‌شود",
     wellDone:"✓ آفرین — جمله کامل این است:", hereIsTheCorrection:"این است تصحیح — آن را بخوانید، سپس روی «بعدی» بزنید:",
     tapLineToTranslate:"روی یک خط ضربه بزنید تا ترجمه آن دیده شود، دوباره ضربه بزنید تا پنهان شود. دو بار ضربه بزنید تا ترجمه کل گفتگو نمایان شود.",
     playDialogue:"▶ پخش گفتگو", playingDialogue:"⏹ توقف",
@@ -21988,7 +21984,15 @@ let ttsVoices = [];
 function pickBestVoice(genderHint){
   if(!ttsVoices.length) return null;
   const en = ttsVoices.filter(v => v.lang && v.lang.toLowerCase().startsWith("en"));
-  const pool = en.length ? en : ttsVoices;
+  // This app reads English text aloud, full stop — never fall back to the whole,
+  // unfiltered voice list just because no English voice was found. A device set up
+  // for a Dari/Persian-speaking learner is exactly the device most likely to have
+  // non-English voices installed, and picking one of those "because something has
+  // to be returned" is how a Listen button ends up speaking the wrong language
+  // entirely. If there's truly no English voice yet, return null and let the
+  // caller fall back to u.lang="en-US" alone (speakNative()) rather than guess.
+  if(!en.length) return null;
+  const pool = en;
   if(genderHint){
     const re = new RegExp(genderHint, "i");
     const networkMatch = pool.find(v => v.localService === false && re.test(v.name));
@@ -22638,7 +22642,7 @@ function renderFlashcards(main, unit){
     </div>`;
     wireSpeakToggle(document.getElementById("cardListenBtn"), {
       isIcon: true, activeLabel: "⏹",
-      run: ()=> speak(plainSentence(v.sentence)),
+      run: ()=> speak(plainSentence(v.sentence), { clipPath: `audio/${unit.id}/vocab-${idx}.mp3` }),
     });
     wireSpeedButtons(main);
     document.getElementById("flipInner").addEventListener("click", ()=>{
@@ -22920,25 +22924,20 @@ function wordDiff(target, given){
   return { targetWords: t1, givenWords: t2 };
 }
 
-/* ---------------- Natural voice (Kokoro — runs 100% on-device) ----------------
-   Kokoro is a small (82M param), Apache-2.0 open text-to-speech model that runs
-   entirely in the browser via WebGPU/WebAssembly — no server, no API key, no
-   per-use cost, ever. It's fetched lazily (only when a Listen button is first
-   tapped) and cached by the browser afterward, so it's a one-time ~80MB
-   download per device, then instant and fully offline. If it can't load for
-   any reason (no internet on first use, the CDN is unreachable, a very old
-   browser) every Listen button transparently falls back to the native browser
-   voice below — nothing breaks, it just sounds like it did before. */
-let kokoroTTS = null;        // the loaded model, once ready
-let kokoroLoading = null;    // in-flight load promise, shared by concurrent clicks
-let kokoroFailed = false;    // sticky — stop retrying once we know this browser/network can't do it
+/* ---------------- Natural voice (pre-generated clips + native fallback) ----------------
+   Every Listen button plays a pre-generated clip (see audio-tools/generate_audio.py)
+   fetched from this app's own audio/ folder — no server, no external CDN, no
+   per-use cost, ever. If a clip is ever missing for some reason, playback falls
+   back straight to the browser's own built-in voice (speakNative(), below) —
+   nothing breaks, it just sounds a bit more robotic for that one line. There is
+   no live model download step anymore: this app no longer depends on any
+   external text-to-speech service being reachable. */
 let kokoroAudioCtx = null;
 let kokoroCurrentSource = null;
 let kokoroPlaybackToken = 0; // bumped on every new speak() / explicit stop — lets in-flight
-                              // generation/playback notice it's been superseded and bail out
+                              // playback notice it's been superseded and bail out
 let kokoroActiveBtn = null;  // the button currently showing "stop" (its playback is live)
 const KOKORO_VOICE_FEMALE = "af_heart";
-const KOKORO_VOICE_MALE = "am_michael";
 
 /* Playback speed — one shared setting for every Listen/Play button in the app,
    adjusted with the slow/fast buttons flanking each play/stop button. Applied as a
@@ -22961,64 +22960,32 @@ function changeSpeed(delta){
   showToast(`${currentSpeedMultiplier()}×`);
 }
 
-/* Dialogue speaker → voice gender. The story's cast is fixed (11 named speakers
-   across all 125 units, confirmed by scanning every dialogue in the data), so a
-   plain lookup is reliable here — no guessing needed at speak-time. Anyone not
-   listed falls back to the default (female) voice. */
-const MALE_DIALOGUE_SPEAKERS = new Set(["diego", "tomas", "waiter", "yusuf"]);
+/* Dialogue speaker → their own distinct voice. The story's cast is fixed (11
+   named speakers across all 125 units, confirmed by scanning every dialogue in
+   the data), so a plain lookup is reliable here — no guessing needed at
+   speak-time. Every named character gets a different Kokoro voice (not just a
+   shared "the men" / "the women" pair) so that in a scene with several people
+   talking, a new voice starting is itself the cue that someone new is speaking —
+   this must stay in sync with SPEAKER_VOICES in audio-tools/extract_manifest.js,
+   which assigns the same voices to the pre-generated dialogue clips. Anyone not
+   listed (a name that isn't in the cast yet) falls back to the default narrator
+   voice, so a new dialogue never breaks — it just isn't distinguished yet. */
+const SPEAKER_VOICES = {
+  "grace":         { kokoroVoice: "af_heart",  gender: "female" },
+  "diego":         { kokoroVoice: "am_michael", gender: "male" },
+  "yusuf":         { kokoroVoice: "am_onyx",    gender: "male" },
+  "mei":           { kokoroVoice: "af_bella",   gender: "female" },
+  "zahra":         { kokoroVoice: "af_nicole",  gender: "female" },
+  "amina":         { kokoroVoice: "af_sarah",   gender: "female" },
+  "tomas":         { kokoroVoice: "am_fenrir",  gender: "male" },
+  "priya":         { kokoroVoice: "af_nova",    gender: "female" },
+  "mei's mother":  { kokoroVoice: "af_river",   gender: "female" },
+  "lina":          { kokoroVoice: "af_sky",     gender: "female" },
+  "waiter":        { kokoroVoice: "am_puck",    gender: "male" },
+};
 function voiceForSpeaker(speakerName){
-  const isMale = !!speakerName && MALE_DIALOGUE_SPEAKERS.has(speakerName.trim().toLowerCase());
-  return isMale
-    ? { kokoroVoice: KOKORO_VOICE_MALE, gender: "male" }
-    : { kokoroVoice: KOKORO_VOICE_FEMALE, gender: "female" };
-}
-
-async function loadKokoro(){
-  if(kokoroTTS) return kokoroTTS;
-  if(kokoroFailed) return null;
-  if(kokoroLoading) return kokoroLoading;
-  kokoroLoading = (async ()=>{
-    try{
-      showToast(t().voiceDownloading);
-      // Load the package's own purpose-built browser bundle (its declared jsdelivr/unpkg
-      // entry point: dist/kokoro.web.js) rather than jsdelivr's generic "+esm" re-bundle —
-      // the generic bundler rewrites the module in a way that's documented to break how
-      // onnxruntime-web locates its own .wasm binaries and Kokoro's voice-data files
-      // (see hexgrad/kokoro issues #100 and #278). The dedicated web build is shipped
-      // specifically so CDN/browser loading resolves those asset paths correctly.
-      const mod = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/dist/kokoro.web.js");
-      const { KokoroTTS } = mod;
-      // Forcing "wasm" rather than preferring WebGPU when available: kokoro-js's own
-      // project notes flag WebGPU support as newer/less battle-tested than the WASM
-      // path, and garbled/wrong-sounding output (reported after WebGPU picked up on a
-      // recent iOS/Safari release) points at that being the likelier cause — the model
-      // itself can only produce American or British English (its code type-restricts
-      // the voice's language to "a"/"b"), so it isn't actually switching languages, the
-      // audio is coming out corrupted. WASM is slower but the well-tested path.
-      const device = "wasm";
-      const tts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", {
-        dtype: "q4", // quantized ~50MB — smaller download AND noticeably faster to generate on
-                     // WASM (CPU) than q8; a small step down in audio fidelity in exchange for
-                     // speech that starts in seconds instead of minutes. WASM (not WebGPU) is
-                     // still used on purpose — see the note above.
-        device,
-      });
-      kokoroTTS = tts;
-      console.log("[Crossroads] Kokoro loaded — device:", device);
-      showToast(t().voiceReady);
-      return tts;
-    }catch(e){
-      kokoroFailed = true;
-      // Surfaced two ways: in the console for real debugging, and as a plain-language
-      // toast so it's visible even to someone who isn't looking at devtools — this used
-      // to fail completely silently, which made it impossible to tell "using the native
-      // voice on purpose" apart from "the natural voice broke and nobody noticed."
-      console.error("[Crossroads] Natural voice (Kokoro) failed to load — falling back to the built-in browser voice. Reason:", e);
-      showToast(t().voiceFallback);
-      return null;
-    }
-  })();
-  return kokoroLoading;
+  const key = speakerName && speakerName.trim().toLowerCase();
+  return (key && SPEAKER_VOICES[key]) || { kokoroVoice: KOKORO_VOICE_FEMALE, gender: "female" };
 }
 
 /* Bumps the token (invalidating any in-flight generate()/playback so it notices on
@@ -23089,26 +23056,32 @@ function ensureAudioContext(){
   return kokoroAudioCtx;
 }
 
-function playRawAudio(audio, myToken){
-  // audio: { audio: Float32Array, sampling_rate: number } — Kokoro's raw output.
-  // Returns a promise that resolves once playback actually finishes, so callers that
-  // need to play several lines in order (e.g. a whole dialogue) can await each one.
-  // myToken (optional): if the global playback token has moved on by the time we're
-  // ready to actually start the sound (Stop was pressed while we awaited resume()),
-  // skip playing it entirely rather than starting audio nobody asked for anymore.
-  return new Promise(async (resolve) => {
-    ensureAudioContext();
-    if(kokoroAudioCtx.state === "suspended"){
-      try{ await kokoroAudioCtx.resume(); }catch(e){ /* ignore — will just stay silent if truly blocked */ }
-    }
+/* Same idea as ensureAudioContext() above, but for the native fallback voice:
+   Safari (iOS especially) silently drops a speechSynthesis.speak() call that
+   happens outside the synchronous user-gesture call stack — which is exactly
+   where our real speak() call lands once it's finished awaiting Kokoro's
+   load/generate steps. Speaking a near-silent utterance synchronously, right on
+   click, "unlocks" the API for the rest of the page's later async speak() calls,
+   the same way playing a silent audio buffer unlocks the AudioContext. Without
+   this, a device where Kokoro fails (or is skipped, like iOS) could fall through
+   to the native voice and still produce no sound at all — which matches "it
+   doesn't read" on iPhone even outside the sandboxed in-app preview. */
+function primeSpeechSynthesis(){
+  if(!('speechSynthesis' in window)) return;
+  try{
+    const unlock = new SpeechSynthesisUtterance(" ");
+    unlock.volume = 0;
+    window.speechSynthesis.speak(unlock);
+  }catch(e){ /* best-effort */ }
+}
+
+/* Plays a ready-made AudioBuffer — the shared final step for both a pre-generated
+   clip (decoded from a fetched MP3) and Kokoro's raw live output (wrapped into a
+   buffer by playRawAudio below), so Stop, speed control, and sequencing behave
+   identically no matter which source the audio came from. */
+function playAudioBuffer(buffer, myToken){
+  return new Promise((resolve) => {
     if(myToken !== undefined && myToken !== kokoroPlaybackToken){ resolve(); return; }
-    if(!audio || !audio.audio || !audio.audio.length || !audio.sampling_rate){
-      console.error("[Crossroads] Kokoro returned unexpected audio output:", audio);
-      resolve();
-      return;
-    }
-    const buffer = kokoroAudioCtx.createBuffer(1, audio.audio.length, audio.sampling_rate);
-    buffer.copyToChannel(audio.audio, 0);
     const source = kokoroAudioCtx.createBufferSource();
     source.buffer = buffer;
     source.playbackRate.value = currentSpeedMultiplier();
@@ -23117,6 +23090,51 @@ function playRawAudio(audio, myToken){
     source.onended = () => { if(kokoroCurrentSource === source) kokoroCurrentSource = null; resolve(); };
     source.start();
   });
+}
+
+async function playRawAudio(audio, myToken){
+  // audio: { audio: Float32Array, sampling_rate: number } — Kokoro's raw output.
+  // myToken (optional): if the global playback token has moved on by the time we're
+  // ready to actually start the sound (Stop was pressed while we awaited resume()),
+  // skip playing it entirely rather than starting audio nobody asked for anymore.
+  ensureAudioContext();
+  if(kokoroAudioCtx.state === "suspended"){
+    try{ await kokoroAudioCtx.resume(); }catch(e){ /* ignore — will just stay silent if truly blocked */ }
+  }
+  if(myToken !== undefined && myToken !== kokoroPlaybackToken) return;
+  if(!audio || !audio.audio || !audio.audio.length || !audio.sampling_rate){
+    console.error("[Crossroads] Kokoro returned unexpected audio output:", audio);
+    return;
+  }
+  const buffer = kokoroAudioCtx.createBuffer(1, audio.audio.length, audio.sampling_rate);
+  buffer.copyToChannel(audio.audio, 0);
+  await playAudioBuffer(buffer, myToken);
+}
+
+/* Pre-generated voice packs — see audio-tools/generate_audio.py. Every line in
+   the app has a small MP3 produced once, offline, on a real computer instead
+   of live in every visitor's browser: instant, no per-device speed/compatibility
+   problems, and it works on iOS too (decoding a plain MP3 is standard WebAudio
+   that every browser, iOS included, handles natively). Returns true if it
+   handled playback (played it, or was stopped mid-fetch/decode) — false only
+   means "no clip here, fall back to the native browser voice instead."
+   Missing files are expected and silent (not every unit may have a clip
+   generated yet), so this never shows an error toast on its own. */
+async function tryPlayPregeneratedClip(clipPath, myToken){
+  if(!clipPath) return false;
+  try{
+    const resp = await fetch(clipPath, { cache: "force-cache" });
+    if(!resp.ok) return false;
+    const arrayBuffer = await resp.arrayBuffer();
+    if(myToken !== undefined && myToken !== kokoroPlaybackToken) return true; // stopped — don't fall back to live either
+    ensureAudioContext();
+    const buffer = await kokoroAudioCtx.decodeAudioData(arrayBuffer);
+    if(myToken !== undefined && myToken !== kokoroPlaybackToken) return true;
+    await playAudioBuffer(buffer, myToken);
+    return true;
+  }catch(e){
+    return false; // no file there yet, or this browser couldn't decode it — fall back to live
+  }
 }
 
 function speakNative(sentence, gender){
@@ -23135,38 +23153,28 @@ function speakNative(sentence, gender){
   });
 }
 
-/* opts: { kokoroVoice, gender } — both optional. Omit for the default narrator
-   voice (used for passages, prompts, vocab — anything without a specific
-   speaker). Dialogue turns pass a speaker-specific voice via voiceForSpeaker().
+/* opts: { gender } — optional. Omit for the default narrator voice (used for
+   passages, prompts, vocab — anything without a specific speaker). Dialogue
+   turns pass a speaker-specific gender via voiceForSpeaker(), used only to
+   pick a male/female native voice if we ever fall back to speakNative().
    Resolves once the audio has actually finished playing, so callers can chain
    several calls in sequence (e.g. playing a whole dialogue turn by turn). */
 async function speak(sentence, opts){
-  const kokoroVoice = (opts && opts.kokoroVoice) || KOKORO_VOICE_FEMALE;
   const gender = opts && opts.gender;
+  const clipPath = opts && opts.clipPath;
   stopCurrentAudioOnly(); // stop whatever audio was playing before (leaves any active-button state alone)...
   const myToken = ++kokoroPlaybackToken; // ...and claim a fresh token for this call.
-  const tts = await loadKokoro();
-  if(myToken !== kokoroPlaybackToken) return; // stopped while the model was loading
-  if(tts){
-    try{
-      // Generate and play sentence-by-sentence rather than the whole passage in one
-      // shot: the first sentence starts playing in a few seconds instead of making
-      // the listener wait for the entire paragraph to finish generating, and it means
-      // Stop only ever has to interrupt the current sentence, not the whole thing.
-      const chunks = splitIntoSentences(sentence);
-      for(const chunk of chunks){
-        if(myToken !== kokoroPlaybackToken) return; // Stop was pressed between sentences
-        const audio = await tts.generate(chunk, { voice: kokoroVoice });
-        if(myToken !== kokoroPlaybackToken) return; // Stop was pressed while generating
-        await playRawAudio(audio, myToken);
-      }
-      return;
-    }catch(e){
-      console.error("[Crossroads] Kokoro generation failed for this line — falling back to the built-in browser voice. Reason:", e);
-      /* fall through to native */
-    }
+
+  // Every line in this app has a pre-generated clip (see audio-tools/generate_audio.py).
+  // Play it if it's there. If a clip is ever missing, go straight to the native
+  // browser voice — there's no live-generation step anymore, so nothing here
+  // depends on any external service being reachable.
+  if(clipPath){
+    const played = await tryPlayPregeneratedClip(clipPath, myToken);
+    if(played) return;
+    if(myToken !== kokoroPlaybackToken) return;
   }
-  if(myToken !== kokoroPlaybackToken) return;
+
   await speakNative(sentence, gender);
 }
 
@@ -23184,6 +23192,7 @@ function wireSpeakToggle(btn, { idleLabel, activeLabel, isIcon, run } = {}){
   btn.dataset.idleTitle = btn.title || "";
   async function start(){
     ensureAudioContext();
+    primeSpeechSynthesis();
     stopAnyPlayback(); // stop whatever else was playing
     kokoroActiveBtn = btn;
     if(isIcon){ btn.textContent = activeLabel; btn.title = t().stopAudio; }
@@ -23263,7 +23272,7 @@ function renderDictation(main, unit){
     </div>`;
     const dictVoice = wireSpeakToggle(document.getElementById("playBtn"), {
       isIcon: true, activeLabel: "⏹",
-      run: ()=> speak(target),
+      run: ()=> speak(target, { clipPath: `audio/${unit.id}/vocab-${unit.vocab.indexOf(v)}.mp3` }),
     });
     wireSpeedButtons(main);
     dictVoice.start(); // auto-play on load, through the same tracked start/stop path
@@ -23347,7 +23356,7 @@ function renderComprehension(main, unit){
 
     wireSpeakToggle(document.getElementById("compListenBtn"), {
       isIcon: true, activeLabel: "⏹",
-      run: ()=> speak(c.textEn),
+      run: ()=> speak(c.textEn, { clipPath: `audio/${unit.id}/comprehension.mp3` }),
     });
     wireSpeedButtons(main);
 
@@ -23406,7 +23415,7 @@ function renderWriting(main, unit){
 
   wireSpeakToggle(document.getElementById("writingListenBtn"), {
     isIcon: true, activeLabel: "⏹",
-    run: ()=> speak(w.promptEn),
+    run: ()=> speak(w.promptEn, { clipPath: `audio/${unit.id}/writing.mp3` }),
   });
   wireSpeedButtons(main);
 
@@ -23455,7 +23464,7 @@ function renderComprehension2(main, unit){
 
     wireSpeakToggle(document.getElementById("comp2ListenBtn"), {
       isIcon: true, activeLabel: "⏹",
-      run: ()=> speak(c.textEn),
+      run: ()=> speak(c.textEn, { clipPath: `audio/${unit.id}/comprehension2.mp3` }),
     });
     wireSpeedButtons(main);
 
@@ -23524,12 +23533,13 @@ function renderGrammarBonus(main, unit){
 
     wireSpeakToggle(document.getElementById("grammarListenBtn"), {
       isIcon: true, activeLabel: "⏹",
-      run: ()=> speak(g.explanationEn),
+      run: ()=> speak(g.explanationEn, { clipPath: `audio/${unit.id}/grammar-explanation.mp3` }),
     });
     document.querySelectorAll("#grammarExamples .listen-fab-inline").forEach(btn=>{
+      const exIdx = btn.dataset.exIdx;
       wireSpeakToggle(btn, {
         isIcon: true, activeLabel: "⏹",
-        run: ()=> speak(g.examples[parseInt(btn.dataset.exIdx, 10)].en),
+        run: ()=> speak(g.examples[parseInt(exIdx, 10)].en, { clipPath: `audio/${unit.id}/grammar-example-${exIdx}.mp3` }),
       });
     });
     wireSpeedButtons(main);
@@ -23582,10 +23592,11 @@ function renderDialogue(main, unit){
     wireSpeakToggle(playBtn, {
       idleLabel: L.playDialogue, activeLabel: L.playingDialogue,
       run: async ()=>{
-        await speak(d.settingEn);
-        for(const turn of d.turns){
+        await speak(d.settingEn, { clipPath: `audio/${unit.id}/dialogue-setting.mp3` });
+        for(let i = 0; i < d.turns.length; i++){
           if(kokoroActiveBtn !== playBtn) return; // Stop was pressed
-          await speak(turn.en, voiceForSpeaker(turn.speakerEn));
+          const turn = d.turns[i];
+          await speak(turn.en, { ...voiceForSpeaker(turn.speakerEn), clipPath: `audio/${unit.id}/dialogue-turn-${i}.mp3` });
         }
       },
     });
