@@ -22841,7 +22841,8 @@ function renderSentenceBuild(main, unit){
     const { words, hasPeriod } = tokenize(v.sentence);
     let answer = [];
     let bank = shuffle(words.map((w,i)=>({w, id:i})));
-    let locked = false;
+    let locked = false; // true once Check is tapped: freezes the tiles AND gates advancing —
+                         // the same button becomes "Next" and needs a second, deliberate tap
 
     main.innerHTML = `<div class="screen">
       ${activityHeader(unit, "sentenceBuild")}
@@ -22895,20 +22896,27 @@ function renderSentenceBuild(main, unit){
       if(locked) return;
       answer = []; renderAnswer(); renderBank();
     });
+    // Same pattern as Listen & Type: the first tap checks the answer and reveals the
+    // correction, staying on screen with no timer; the button relabels itself "Next"
+    // and only a second, deliberate tap advances — so a wrong answer doesn't flash by
+    // before the student has actually read the correction.
     document.getElementById("sbCheck").addEventListener("click", ()=>{
-      if(locked) return;
-      locked = true;
-      const built = answer.map(a=>a.w).join(" ") + (hasPeriod ? "." : "");
-      const target = plainSentence(v.sentence);
-      const ok = built.trim().toLowerCase() === target.trim().toLowerCase();
-      if(ok) correct++;
-      const fb = document.getElementById("sbFeedback");
-      fb.textContent = ok ? "✓ " + target : "✗ " + target;
-      fb.className = "sb-feedback " + (ok ? "correct" : "wrong");
-      setTimeout(()=>{
-        if(idx < items.length-1){ idx++; draw(); }
-        else { renderResultScreen(main, unit, "sentenceBuild", correct, items.length, ()=>renderSentenceBuild(document.getElementById('main'), unit)); }
-      }, 1100);
+      if(!locked){
+        locked = true;
+        const built = answer.map(a=>a.w).join(" ") + (hasPeriod ? "." : "");
+        const target = plainSentence(v.sentence);
+        const ok = built.trim().toLowerCase() === target.trim().toLowerCase();
+        if(ok) correct++;
+        const fb = document.getElementById("sbFeedback");
+        fb.textContent = ok ? "✓ " + target : "✗ " + target;
+        fb.className = "sb-feedback " + (ok ? "correct" : "wrong");
+        fb.scrollIntoView({ behavior: "smooth", block: "center" });
+        document.getElementById("sbClear").style.display = "none"; // nothing left to clear once locked
+        document.getElementById("sbCheck").textContent = L.next;
+        return;
+      }
+      if(idx < items.length-1){ idx++; draw(); }
+      else { renderResultScreen(main, unit, "sentenceBuild", correct, items.length, ()=>renderSentenceBuild(document.getElementById('main'), unit)); }
     });
   }
   draw();
