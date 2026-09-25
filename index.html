@@ -171,6 +171,20 @@ body.dari-mode .grammar-note .g-en{ color: rgba(255,255,255,0.6); font-size:0.82
 body.dari-mode .grammar-note{ display:flex; flex-direction:column; }
 body.dari-mode .grammar-note .g-dari{ order:1; font-size:1rem; }
 
+/* Unit summary intro — same indigo background / white text treatment the old
+   grammar-note box used, layered on top of the plain .passage-block styling
+   (border, radius, padding, tap-to-reveal Dari) rather than replacing it.
+   Selector is written as .passage-block.unit-summary-block (not just
+   .unit-summary-block alone) so its background reliably beats .passage-block's
+   own background:#fff rule regardless of which one is declared later in the
+   file — same specificity, so source order would otherwise decide the winner,
+   and this makes it not matter. Without that, the background stayed white
+   while the text below still turned white, making the whole box unreadable. */
+.passage-block.unit-summary-block{ background: var(--indigo); color:#fff; border-color: var(--indigo); }
+.unit-summary-block .passage-en{ color:#fff; }
+.unit-summary-block .passage-dari{ color: var(--gold-soft); border-top-color: rgba(255,255,255,0.25); }
+body.dari-mode .unit-summary-block .passage-en{ color: rgba(255,255,255,0.6); }
+
 .activity-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
 .activity-tile{
   background:#fff; border: 1.5px solid var(--line); border-radius: var(--radius-card);
@@ -28476,15 +28490,11 @@ function renderUnitHub(main, unitId){
       <div class="unit-title">${lang==='en' ? unit.title : unit.titleDari}</div>
     </div>
     ${(unit.summaryEn && unit.summaryDari) ? `
-    <div class="passage-block dialogue-tap-line" id="unitSummaryBlock">
+    <div class="passage-block unit-summary-block dialogue-tap-line" id="unitSummaryBlock">
       <div class="passage-en lat">${renderEmphasis(unit.summaryEn)}</div>
       <div class="passage-dari revealable">${renderEmphasis(unit.summaryDari)}</div>
     </div>
     <div class="passage-hint">${L.tapSummaryToTranslate}</div>` : ``}
-    <div class="grammar-note">
-      <div class="g-en lat">${unit.grammarEn}</div>
-      <div class="g-dari">${unit.grammarDari}</div>
-    </div>
     <div class="level-reward-note">💵 ${L.rewardNote}</div>
     <div class="activity-grid">
       ${ACTIVITY_ORDER.map(a=>{
