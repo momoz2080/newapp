@@ -101,6 +101,17 @@ body.dari-mode .brand-name{ font-family: var(--dari); }
 main{ flex:1; padding: 18px 16px 90px; }
 
 /* ---------- Trail (home) ---------- */
+/* Two-semester tab switcher — each tab spans the levels leading up to one
+   book-boundary milestone in MEDALS (see semesterLevels()). Defaults to tab 1. */
+.semester-tabs{ display:flex; gap:8px; margin-bottom: 26px; }
+.semester-tab{
+  flex:1; padding: 11px 8px; border-radius: 999px; border: 2px solid var(--line);
+  background:#fff; font-family: var(--serif); font-weight:700; font-size:0.92rem;
+  color: var(--ink-soft); cursor:pointer; transition: all 0.15s ease;
+}
+body.dari-mode .semester-tab{ font-family: var(--dari); }
+.semester-tab.active{ background: var(--indigo); border-color: var(--indigo); color:#fff; }
+
 .level-block{ margin-bottom: 34px; }
 .level-heading{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
 .level-title{ font-family: var(--serif); font-size:1.3rem; font-weight:600; color: var(--indigo); }
@@ -108,6 +119,10 @@ body.dari-mode .level-title{ font-family: var(--dari); font-weight:700; }
 .level-status{ font-size:0.8rem; font-weight:700; color: var(--ink-soft); text-transform: none; }
 .level-status.done{ color: var(--sage); }
 
+/* The winding trail path, restored — one per level, nodes connected by a
+   progress line, scrollable horizontally. Levels are grouped under semester
+   tabs (see semesterLevels()), and each level's own heading number restarts
+   at 1 within its semester (see renderTrail). */
 .trail{
   position:relative; padding: 10px 6px 26px;
   overflow-x:auto; -webkit-overflow-scrolling: touch;
@@ -570,6 +585,7 @@ const UI = {
     examMcqIntro:"Test what you've learned across this whole unit — vocabulary, grammar, and both reading passages.",
     examQualIntro:"Now answer in your own words. These are for practice — there's no grading.",
     examQ1Label:"Question about Reading Passage 1", examQ2Label:"Question about Reading Passage 2",
+    firstSemester:"First Semester", secondSemester:"Second Semester", thirdSemester:"Third Semester",
     dialogueIntro:"Read the dialogue below. Try reading it aloud — with a partner, or all the parts yourself.",
     tapToFlip:"Tap the card to flip", of:"of", next:"Next", finish:"Finish", checkAnswer:"Check", tryAgain:"Try Again", playAudio:"Play sentence",
     stopAudio:"Stop", slower:"Slower", faster:"Faster",
@@ -617,6 +633,7 @@ const UI = {
     examMcqIntro:"آنچه در سراسر این واحد یاد گرفته‌اید را بیازمایید — لغات، گرامر و هر دو متن خواندن.",
     examQualIntro:"حالا به زبان خودتان پاسخ دهید. این‌ها فقط برای تمرین هستند — نمره‌دهی نمی‌شوند.",
     examQ1Label:"سوال درباره متن خواندن اول", examQ2Label:"سوال درباره متن خواندن دوم",
+    firstSemester:"نیم‌سال اول", secondSemester:"نیم‌سال دوم", thirdSemester:"نیم‌سال سوم",
     dialogueIntro:"گفتگوی زیر را بخوانید. سعی کنید آن را با صدای بلند بخوانید — با یک همراه، یا تمام نقش‌ها را خودتان بخوانید.",
     tapToFlip:"روی کارت لمس کنید", of:"از", next:"بعدی", finish:"پایان", checkAnswer:"بررسی", tryAgain:"دوباره تلاش کنید", playAudio:"پخش جمله",
     stopAudio:"توقف", slower:"آهسته‌تر", faster:"سریع‌تر",
@@ -30231,13 +30248,20 @@ const UNIT_REWARD = 2; // dollars credited per completed unit
 // Milestone medals — awarded once every unit in levels 1..uptoLevel is complete.
 // uptoLevel must actually exist in LEVELS (guarded in partMilestoneComplete) so a
 // milestone never fires early just because later levels haven't been authored yet.
-// Crossroads has two book-boundary milestones, each paying a lump-sum cash bonus
+// Crossroads has three book-boundary milestones, each paying a lump-sum cash bonus
 // on top of the per-unit rewards already earned along the way (see checkPartMilestones).
+// The three line up with the story's own year-boundaries: Level 10 ("A Year Well
+// Lived") closes Year One, Level 18 ("Seasons Ahead" — echoing the same seasonal
+// language as Level 3/Level 8) closes Year Two, and Level 26 ("Full Circle") closes
+// the whole book.
 const MEDALS = [
   { part: 1, uptoLevel: 10, bonus: 20, titleEn: "Perseverance Student", titleDari: "دانش‌آموز با پشتکار",
     reflectionEn: "Perseverance means continuing to try, even when learning feels slow or difficult. Every unit you finish is proof that small, steady effort adds up to real progress. Learning a new language takes patience and persistence — and you've shown both by reaching this milestone.",
     reflectionDari: "پشتکار یعنی ادامه دادن به تلاش، حتی وقتی یادگیری کند یا سخت به نظر می‌رسد. هر واحدی که تکمیل می‌کنید نشان می‌دهد که تلاش کوچک و پیوسته به پیشرفت واقعی تبدیل می‌شود. یادگیری یک زبان جدید به صبر و پشتکار نیاز دارد — و شما با رسیدن به این مرحله هر دو را نشان داده‌اید." },
-  { part: 2, uptoLevel: 26, bonus: 30, titleEn: "Best Student", titleDari: "بهترین دانش‌آموز" },
+  { part: 2, uptoLevel: 18, bonus: 20, titleEn: "Brilliant Student", titleDari: "دانش‌آموز درخشان",
+    reflectionEn: "Being brilliant isn't about never struggling — it's about how you respond when a lesson doesn't come easily. You've now finished a full second year of units, sharpening not just your English but your ability to learn something new. That combination of skill and persistence is what makes a truly brilliant student.",
+    reflectionDari: "درخشان بودن به این معنا نیست که هرگز با مشکل روبه‌رو نشوید — بلکه به این معناست که وقتی یک درس به‌آسانی یاد گرفته نمی‌شود، چگونه واکنش نشان می‌دهید. شما اکنون یک سال کامل دوم از واحدها را به پایان رسانده‌اید و نه‌تنها انگلیسی‌تان، بلکه توانایی‌تان برای یادگیری چیزهای جدید را نیز تقویت کرده‌اید. همین ترکیب از مهارت و پشتکار است که یک دانش‌آموز واقعاً درخشان را می‌سازد." },
+  { part: 3, uptoLevel: 26, bonus: 30, titleEn: "Best Student", titleDari: "بهترین دانش‌آموز" },
 ];
 function medalByPart(part){ return MEDALS.find(m=>m.part===part); }
 </script>
@@ -30248,6 +30272,7 @@ function medalByPart(part){ return MEDALS.find(m=>m.part===part); }
 let lang = "en";
 let state = null;
 let currentScreen = { name: "trail" };
+let trailSemesterTab = 1; // which semester tab is showing on the Trail (landing) screen — not persisted
 let synthVoice = null;
 let synthVoiceFemale = null;
 let synthVoiceMale = null;
@@ -30646,7 +30671,7 @@ function showMilestoneCelebration(medal){
   document.body.appendChild(overlay);
   playChime();
   setTimeout(()=>{
-    const reflection = medal.part === 1 ? `<div class="medal-reflection">
+    const reflection = medal.reflectionEn ? `<div class="medal-reflection">
         <div class="refl-en lat">${medal.reflectionEn}</div>
         <div class="refl-dari">${medal.reflectionDari}</div>
       </div>` : "";
@@ -30746,18 +30771,48 @@ function render(){
   if(currentScreen.name === "backup") return renderBackup(main);
 }
 
-/* ---------------- Trail screen ---------------- */
+/* ---------------- Trail screen ----------------
+   Semesters, one per book-boundary milestone in MEDALS: Semester 1 runs
+   through MEDALS[0].uptoLevel, Semester 2 from there through MEDALS[1].uptoLevel,
+   and so on. Tabs at the top switch between them (defaulting to Semester 1).
+   Within a semester, levels are shown the original way — a winding path per
+   level, its units as nodes connected by a progress line, tapping a node
+   navigating straight to that unit's hub (renderUnitHub) same as always.
+   Each level's own heading number restarts at 1 within its semester, so
+   "Level 1" always means the first level of whichever semester is showing —
+   the real, global level.id (used for all progress/data lookups) is untouched. */
+// tab is 1-indexed and lines up 1:1 with MEDALS — tab N covers the levels from
+// the previous milestone's uptoLevel (exclusive) through MEDALS[N-1].uptoLevel.
+// Generic over however many milestones MEDALS holds (currently 3).
+function semesterLevels(tab){
+  const lower = tab === 1 ? 0 : MEDALS[tab-2].uptoLevel;
+  const upper = MEDALS[tab-1].uptoLevel;
+  return LEVELS.filter(l=> l.id > lower && l.id <= upper);
+}
+
+const SEMESTER_LABEL_KEYS = ["firstSemester", "secondSemester", "thirdSemester"];
+
 function renderTrail(main){
   const L = t();
-  let html = "";
-  LEVELS.forEach(level=>{
+  const tab = trailSemesterTab;
+  const levels = semesterLevels(tab);
+
+  let html = `<div class="semester-tabs">
+    ${MEDALS.map((m, i)=>{
+      const tabNum = i+1;
+      return `<button class="semester-tab ${tab===tabNum?'active':''}" data-tab="${tabNum}">${L[SEMESTER_LABEL_KEYS[i]]}</button>`;
+    }).join("")}
+  </div>`;
+
+  levels.forEach((level, levelIdx)=>{
+    const displayLevelNum = levelIdx + 1; // restarts at 1 for each semester
     const done = unitsDoneCount(level);
     const total = level.units.length;
     const isComplete = done === total;
     const pct = Math.round((done/total)*100);
     html += `<div class="level-block">
       <div class="level-heading">
-        <div class="level-title">${L.level} ${level.id} · ${lang==='en' ? level.subtitle : level.subtitleDari}</div>
+        <div class="level-title">${L.level} ${displayLevelNum} · ${lang==='en' ? level.subtitle : level.subtitleDari}</div>
         <div class="level-status ${isComplete?'done':''}">${isComplete ? '✓ '+L.complete : L.unitsToGo(total-done)}</div>
       </div>
       <div class="trail">
@@ -30777,19 +30832,40 @@ function renderTrail(main){
           }).join("")}
           <div class="node-wrap">
             <div class="node node-flag">🚩</div>
-            <div class="node-label">${L.level} ${level.id}</div>
+            <div class="node-label">${L.level} ${displayLevelNum}</div>
           </div>
         </div>
       </div>
     </div>`;
   });
   main.innerHTML = `<div class="screen">${html}</div>`;
+
+  document.querySelectorAll(".semester-tab").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const newTab = parseInt(btn.dataset.tab, 10);
+      if(newTab === trailSemesterTab) return;
+      trailSemesterTab = newTab;
+      render();
+    });
+  });
 }
 
 /* ---------------- Unit hub ---------------- */
 function findUnit(unitId){
   for(const lv of LEVELS){ const u = lv.units.find(x=>x.id===unitId); if(u) return {unit:u, level:lv}; }
   return null;
+}
+
+// A level's position within its own semester (restarts at 1 per semester),
+// matching the "Level N" numbering shown on the Trail screen — see
+// semesterLevels(). Used anywhere else a level number is displayed (the Unit
+// Hub and activity headers) so the number is never inconsistent with the Trail.
+function displayLevelNum(level){
+  for(let tab=1; tab<=MEDALS.length; tab++){
+    const idx = semesterLevels(tab).findIndex(l=> l.id === level.id);
+    if(idx !== -1) return idx+1;
+  }
+  return level.id;
 }
 
 function renderUnitHub(main, unitId){
@@ -30799,7 +30875,7 @@ function renderUnitHub(main, unitId){
   main.innerHTML = `<div class="screen">
     <div class="back-row"><button class="back-btn" onclick="navTo({name:'trail'})">← ${L.back}</button></div>
     <div class="unit-header">
-      <div class="unit-kicker">${L.level} ${level.id} · ${lang==='en' ? level.subtitle : level.subtitleDari}</div>
+      <div class="unit-kicker">${L.level} ${displayLevelNum(level)} · ${lang==='en' ? level.subtitle : level.subtitleDari}</div>
       <div class="unit-title">${lang==='en' ? unit.title : unit.titleDari}</div>
     </div>
     ${(unit.summaryEn && unit.summaryDari) ? `
@@ -30867,7 +30943,7 @@ function activityHeader(unit, activityKey){
   const { level } = findUnit(unit.id);
   const unitTitle = lang==='en' ? unit.title : unit.titleDari;
   return `<div class="back-row"><button class="back-btn" onclick="navTo({name:'unit', unitId:${unit.id}})">← ${L.backToUnit}</button></div>
-  <div class="unit-header"><div class="unit-kicker">${L.level} ${level.id} / ${unitTitle}</div><div class="unit-title">${L.activities[activityKey]}</div></div>`;
+  <div class="unit-header"><div class="unit-kicker">${L.level} ${displayLevelNum(level)} / ${unitTitle}</div><div class="unit-title">${L.activities[activityKey]}</div></div>`;
 }
 
 async function markActivityDone(unit, activityKey, passed){
@@ -31079,7 +31155,7 @@ function renderMCQ(main, unit){
         setTimeout(()=>{
           answered = false;
           if(idx < items.length-1){ idx++; draw(); }
-          else { renderResultScreen(main, unit, "mcq", correct, items.length, ()=>renderMCQ(document.getElementById('main'), unit)); }
+          else { renderResultScreen(main, unit, "mcq", correct, items.length, ()=>renderMCQ(main, unit)); }
         }, 650);
       });
     });
@@ -31120,7 +31196,7 @@ function renderFillBlank(main, unit){
         setTimeout(()=>{
           answered = false;
           if(idx < items.length-1){ idx++; draw(); }
-          else { renderResultScreen(main, unit, "fillBlank", correct, items.length, ()=>renderFillBlank(document.getElementById('main'), unit)); }
+          else { renderResultScreen(main, unit, "fillBlank", correct, items.length, ()=>renderFillBlank(main, unit)); }
         }, 650);
       });
     });
@@ -31220,7 +31296,7 @@ function renderSentenceBuild(main, unit){
         return;
       }
       if(idx < items.length-1){ idx++; draw(); }
-      else { renderResultScreen(main, unit, "sentenceBuild", correct, items.length, ()=>renderSentenceBuild(document.getElementById('main'), unit)); }
+      else { renderResultScreen(main, unit, "sentenceBuild", correct, items.length, ()=>renderSentenceBuild(main, unit)); }
     });
   }
   draw();
@@ -31623,7 +31699,7 @@ function renderDictation(main, unit){
       }
       answered = false;
       if(idx < items.length-1){ idx++; draw(); }
-      else { renderResultScreen(main, unit, "dictation", correct, items.length, ()=>renderDictation(document.getElementById('main'), unit)); }
+      else { renderResultScreen(main, unit, "dictation", correct, items.length, ()=>renderDictation(main, unit)); }
     });
   }
   draw();
