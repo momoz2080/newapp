@@ -212,6 +212,8 @@ body.dari-mode .passage-block{ display:flex; flex-direction:column; }
 body.dari-mode .passage-en{ order:2; font-size:0.88rem; color: var(--ink-soft); margin-bottom:0; margin-top:12px; border-top: 1px dashed var(--line); padding-top:12px; }
 body.dari-mode .passage-dari{ order:1; border-top:none; padding-top:0; font-size:1.05rem; }
 .passage-hint{ font-size:0.82rem; color: var(--ink-soft); margin-bottom:18px; }
+.exam-divider{ margin-top: 22px; padding-top: 18px; border-top: 1.5px dashed var(--line); }
+.exam-qual-gap{ margin-top: 20px; }
 
 /* Listen buttons — reuse the app's built-in speech engine (see speak()) wherever
    there's a chunk of English text worth reading aloud: passages, prompts, dialogue
@@ -564,7 +566,10 @@ const UI = {
     inProgress: "in progress", complete: "complete", locked: "locked",
     unitsToGo: (n)=> n===1 ? "1 unit to go" : n+" units to go",
     rewardNote: "Complete these 6 activities to earn $2.",
-    activities: {flashcards:"Flashcards", match:"Match", mcq:"Multiple Choice", fillBlank:"Fill the Blank", sentenceBuild:"Build the Sentence", dictation:"Listen & Type", comprehension:"Reading Passage", writing:"Writing Prompt", comprehension2:"Second Reading Passage", grammar:"Grammar Focus", dialogue:"Dialogue Practice"},
+    activities: {flashcards:"Flashcards", match:"Match", mcq:"Multiple Choice", fillBlank:"Fill the Blank", sentenceBuild:"Build the Sentence", dictation:"Listen & Type", comprehension:"Reading Passage", writing:"Writing Prompt", comprehension2:"Second Reading Passage", grammar:"Grammar Focus", dialogue:"Dialogue Practice", exam:"Exam"},
+    examMcqIntro:"Test what you've learned across this whole unit — vocabulary, grammar, and both reading passages.",
+    examQualIntro:"Now answer in your own words. These are for practice — there's no grading.",
+    examQ1Label:"Question about Reading Passage 1", examQ2Label:"Question about Reading Passage 2",
     dialogueIntro:"Read the dialogue below. Try reading it aloud — with a partner, or all the parts yourself.",
     tapToFlip:"Tap the card to flip", of:"of", next:"Next", finish:"Finish", checkAnswer:"Check", tryAgain:"Try Again", playAudio:"Play sentence",
     stopAudio:"Stop", slower:"Slower", faster:"Faster",
@@ -608,7 +613,10 @@ const UI = {
     inProgress: "در حال انجام", complete: "تکمیل", locked: "قفل است",
     unitsToGo: (n)=> n+" واحد باقی مانده",
     rewardNote: "با تکمیل این ۶ تمرین، ۲ دالر بدست آورید.",
-    activities: {flashcards:"کارت‌های آموزشی", match:"جفت کردن", mcq:"چهار گزینه‌ای", fillBlank:"جای خالی را پر کنید", sentenceBuild:"جمله را بسازید", dictation:"بشنو و بنویس", comprehension:"متن خواندن", writing:"تمرین نوشتن", comprehension2:"متن خواندن دوم", grammar:"تمرکز گرامر", dialogue:"تمرین گفتگو"},
+    activities: {flashcards:"کارت‌های آموزشی", match:"جفت کردن", mcq:"چهار گزینه‌ای", fillBlank:"جای خالی را پر کنید", sentenceBuild:"جمله را بسازید", dictation:"بشنو و بنویس", comprehension:"متن خواندن", writing:"تمرین نوشتن", comprehension2:"متن خواندن دوم", grammar:"تمرکز گرامر", dialogue:"تمرین گفتگو", exam:"امتحان"},
+    examMcqIntro:"آنچه در سراسر این واحد یاد گرفته‌اید را بیازمایید — لغات، گرامر و هر دو متن خواندن.",
+    examQualIntro:"حالا به زبان خودتان پاسخ دهید. این‌ها فقط برای تمرین هستند — نمره‌دهی نمی‌شوند.",
+    examQ1Label:"سوال درباره متن خواندن اول", examQ2Label:"سوال درباره متن خواندن دوم",
     dialogueIntro:"گفتگوی زیر را بخوانید. سعی کنید آن را با صدای بلند بخوانید — با یک همراه، یا تمام نقش‌ها را خودتان بخوانید.",
     tapToFlip:"روی کارت لمس کنید", of:"از", next:"بعدی", finish:"پایان", checkAnswer:"بررسی", tryAgain:"دوباره تلاش کنید", playAudio:"پخش جمله",
     stopAudio:"توقف", slower:"آهسته‌تر", faster:"سریع‌تر",
@@ -897,7 +905,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Meet the whole cast on their very first night of class at the Astoria Welcome Center, and practice introducing yourself just like they do — your *name*, where you're from, and your *job* — using am, is, and are.",
-        "summaryDari": "در همان شب اول صنف در مرکز خوش‌آمدید آستوریا با تمام کاراکترهای داستان آشنا می‌شوید و مانند آن‌ها تمرین می‌کنید که خودتان را معرفی کنید — *نام*‌تان، اهل کجا هستید و *شغل*‌تان — با استفاده از افعال am، is و are."
+        "summaryDari": "در همان شب اول صنف در مرکز خوش‌آمدید آستوریا با تمام کاراکترهای داستان آشنا می‌شوید و مانند آن‌ها تمرین می‌کنید که خودتان را معرفی کنید — *نام*‌تان، اهل کجا هستید و *شغل*‌تان — با استفاده از افعال am، is و are.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "What is Yusuf's job?",
+              "qDari": "شغل یوسف چیست؟",
+              "options": [
+                "Teacher",
+                "Mechanic",
+                "Baker",
+                "Business owner"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Choose the sentence that uses am/is/are correctly.",
+              "qDari": "کدام جمله am/is/are را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "I is a teacher.",
+                "She are a teacher.",
+                "He is a mechanic.",
+                "They am students."
+              ],
+              "correct": 2
+            },
+            {
+              "q": "Where does Grace's English class meet?",
+              "qDari": "صنف انگلیسی گریس در کجا برگزار می‌شود؟",
+              "options": [
+                "Yusuf's garage",
+                "The Astoria Welcome Center",
+                "Mei's bakery",
+                "Diego's apartment"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe what happens on the first night of Grace's class. Who is in the room, and what does Grace ask everyone to share?",
+              "promptDari": "به زبان خودتان توضیح دهید که در شب اول صنف گریس چه اتفاقی می‌افتد. چه کسانی در اتاق هستند و گریس از همه می‌خواهد چه چیزی را به اشتراک بگذارند؟"
+            },
+            {
+              "promptEn": "Amina and Yusuf both left their home countries to start new lives. In your own words, compare their jobs and their goals for the future.",
+              "promptDari": "امینه و یوسف هر دو کشور خود را ترک کردند تا زندگی جدیدی را شروع کنند. به زبان خودتان، شغل‌ها و اهداف آینده آن‌ها را با هم مقایسه کنید."
+            }
+          ]
+        }
       },
       {
         "id": 2,
@@ -1200,7 +1255,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Follow Mei through a typical morning at her bakery as you practice the present simple — adding -s for he/she/it — to describe daily *routine*s and *schedule*s, from waking up to opening for the day.",
-        "summaryDari": "صبح معمولی می را در نانوایی‌اش دنبال می‌کنید و زمان حال ساده را تمرین می‌کنید — با افزودن -s برای he/she/it — تا *روتین*‌ها و *برنامه*‌های روزانه را توصیف کنید، از بیدار شدن تا باز کردن نانوایی."
+        "summaryDari": "صبح معمولی می را در نانوایی‌اش دنبال می‌کنید و زمان حال ساده را تمرین می‌کنید — با افزودن -s برای he/she/it — تا *روتین*‌ها و *برنامه*‌های روزانه را توصیف کنید، از بیدار شدن تا باز کردن نانوایی.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word means 'to become awake'?",
+              "qDari": "کدام کلمه به معنای «بیدار شدن» است؟",
+              "options": [
+                "commute",
+                "rest",
+                "wake up",
+                "practice"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "Choose the correct sentence using the present simple.",
+              "qDari": "کدام جمله حال ساده را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Mei wake up at five.",
+                "Mei wakes up at five.",
+                "Mei is wake up at five.",
+                "Mei waking up at five."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What does Mei sell at her bakery?",
+              "qDari": "می در نانوایی‌اش چه می‌فروشد؟",
+              "options": [
+                "Only coffee",
+                "Vegetables",
+                "Bread, pastries, and cakes",
+                "Only bread"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Describe Mei's daily routine in your own words, from the time she wakes up to the time she goes to English class.",
+              "promptDari": "روال روزانه می را از زمانی که بیدار می‌شود تا زمانی که به صنف انگلیسی می‌رود، به زبان خودتان توصیف کنید."
+            },
+            {
+              "promptEn": "Yusuf has a long and tiring day. In your own words, explain why he keeps studying English even when he is tired.",
+              "promptDari": "روز یوسف طولانی و خسته‌کننده است. به زبان خودتان توضیح دهید چرا او حتی وقتی خسته است باز هم انگلیسی می‌خواند."
+            }
+          ]
+        }
       },
       {
         "id": 3,
@@ -1491,7 +1593,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "It's the first snow of the year, and everyone in class is bundled up — the perfect moment to practice am/is/are + -ing to say exactly what someone is *wearing* right now, from a warm *coat* to a *scarf*.",
-        "summaryDari": "اولین برف سال باریده و همه در صنف گرم پوشیده‌اند — بهترین فرصت برای تمرین am/is/are + -ing تا دقیقاً بگویید کسی همین حالا چه *می‌پوشد*، از یک *کت* گرم تا *شال‌گردن*."
+        "summaryDari": "اولین برف سال باریده و همه در صنف گرم پوشیده‌اند — بهترین فرصت برای تمرین am/is/are + -ing تا دقیقاً بگویید کسی همین حالا چه *می‌پوشد*، از یک *کت* گرم تا *شال‌گردن*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word describes something you wear on your hands?",
+              "qDari": "کدام کلمه چیزی را توصیف می‌کند که روی دستان‌تان می‌پوشید؟",
+              "options": [
+                "boots",
+                "gloves",
+                "scarf",
+                "hat"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Choose the correct sentence.",
+              "qDari": "کدام جمله درست است؟",
+              "options": [
+                "Amina wear a coat.",
+                "Amina is wearing a coat.",
+                "Amina wears is a coat.",
+                "Amina be wearing a coat."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What is Yusuf still wearing when he arrives at class?",
+              "qDari": "یوسف وقتی به صنف می‌رسد هنوز چه پوشیده است؟",
+              "options": [
+                "A suit",
+                "His pajamas",
+                "His work uniform",
+                "A swimsuit"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Describe what each person is wearing in the classroom, and explain why the weather makes this a good topic to talk about.",
+              "promptDari": "توضیح دهید هر فرد در صنف چه پوشیده است و بگویید چرا آب‌وهوا این موضوع را برای صحبت کردن مناسب می‌سازد."
+            },
+            {
+              "promptEn": "Diego dreams of opening his own restaurant someday. In your own words, describe his dream and who he plans to ask for advice.",
+              "promptDari": "دیه‌گو رویای باز کردن رستورانت خودش را دارد. به زبان خودتان رویای او و اینکه از چه کسی می‌خواهد مشوره بگیرد را توضیح دهید."
+            }
+          ]
+        }
       },
       {
         "id": 4,
@@ -1806,7 +1955,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Look around a busy classroom where Grace is teaching, Amina is writing, and Yusuf is listening, and practice the present continuous to describe what is *happening* right now, using verbs like *explain*, *smile*, and *help*.",
-        "summaryDari": "به یک صنف پرمصروفیت نگاه کنید جایی که گریس درس می‌دهد، امینه می‌نویسد و یوسف گوش می‌دهد، و زمان حال استمراری را تمرین کنید تا آنچه همین حالا *در حال وقوع* است را توصیف کنید، با افعالی مانند *explain*، *smile* و *help*."
+        "summaryDari": "به یک صنف پرمصروفیت نگاه کنید جایی که گریس درس می‌دهد، امینه می‌نویسد و یوسف گوش می‌دهد، و زمان حال استمراری را تمرین کنید تا آنچه همین حالا *در حال وقوع* است را توصیف کنید، با افعالی مانند *explain*، *smile* و *help*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word means to make a new grammar rule clear?",
+              "qDari": "کدام کلمه به معنای روشن کردن یک قاعده گرامری جدید است؟",
+              "options": [
+                "listen",
+                "explain",
+                "wait",
+                "laugh"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Choose the sentence that correctly describes something happening right now.",
+              "qDari": "کدام جمله چیزی را که همین حالا اتفاق می‌افتد به‌درستی توصیف می‌کند؟",
+              "options": [
+                "Diego tell a story.",
+                "Diego is telling a story.",
+                "Diego tells is a story.",
+                "Diego told a story now."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What is the good news in Zahra's message to Yusuf?",
+              "qDari": "خبر خوش در پیام زهرا به یوسف چیست؟",
+              "options": [
+                "She is visiting Yusuf",
+                "She found a new job",
+                "Her interview is next month",
+                "She is moving to New York"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Describe what is happening in the classroom in the passage — what is each person doing, and why does Grace say a noisy class is okay?",
+              "promptDari": "توضیح دهید در صنف در این متن چه اتفاقی می‌افتد — هر فرد چه کار می‌کند و چرا گریس می‌گوید صنف پرسروصدا اشکالی ندارد؟"
+            },
+            {
+              "promptEn": "In your own words, explain what Yusuf is thinking about while he works, and why the message from his sister makes him smile.",
+              "promptDari": "به زبان خودتان توضیح دهید یوسف درحالی‌که کار می‌کند به چه چیزی فکر می‌کند و چرا پیام خواهرش او را به لبخند وامی‌دارد."
+            }
+          ]
+        }
       },
       {
         "id": 5,
@@ -2109,7 +2305,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Amina asks Grace a sharp grammar question in class — the perfect excuse to learn that thought-and-feeling verbs like *know*, *want*, and *understand* usually skip the -ing, even when you're talking about right now.",
-        "summaryDari": "امینه در صنف یک سوال گرامری هوشمندانه از گریس می‌پرسد — بهانه‌ای خوب برای یاد گرفتن اینکه افعال فکر و احساس مانند *know*، *want* و *understand* معمولاً -ing نمی‌گیرند، حتی وقتی درباره همین حالا صحبت می‌کنید."
+        "summaryDari": "امینه در صنف یک سوال گرامری هوشمندانه از گریس می‌پرسد — بهانه‌ای خوب برای یاد گرفتن اینکه افعال فکر و احساس مانند *know*، *want* و *understand* معمولاً -ing نمی‌گیرند، حتی وقتی درباره همین حالا صحبت می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which of these verbs describes a feeling or thought, not an action?",
+              "qDari": "کدام یک از این افعال یک احساس یا فکر را توصیف می‌کند، نه یک عمل؟",
+              "options": [
+                "run",
+                "eat",
+                "want",
+                "sing"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "Choose the correct sentence.",
+              "qDari": "کدام جمله درست است؟",
+              "options": [
+                "I am knowing your name.",
+                "I am wanting coffee.",
+                "I understand this lesson.",
+                "I am understanding this lesson."
+              ],
+              "correct": 2
+            },
+            {
+              "q": "According to Grace, what kind of verbs are usually not used with -ing?",
+              "qDari": "به گفته گریس، چه نوع افعالی معمولاً با -ing استفاده نمی‌شوند؟",
+              "options": [
+                "Verbs like run and jump",
+                "Verbs about food",
+                "Verbs like know, want, and understand",
+                "Verbs about the weather"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, explain the grammar rule Grace teaches about verbs like know, want, and understand. Use an example from the passage.",
+              "promptDari": "به زبان خودتان قاعده گرامری که گریس درباره افعالی مانند know، want و understand تدریس می‌کند را توضیح دهید. از یک مثال در متن استفاده کنید."
+            },
+            {
+              "promptEn": "Describe Diego's dream restaurant in your own words. What makes it special, and why does he believe Astoria is the right place for it?",
+              "promptDari": "رستورانت رویایی دیه‌گو را به زبان خودتان توصیف کنید. چه چیزی آن را خاص می‌سازد و چرا او باور دارد آستوریا جای مناسبی برای آن است؟"
+            }
+          ]
+        }
       }
     ]
   },
@@ -2414,7 +2657,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Amina has a big exam coming up and feels both excited and nervous — a great way to learn *feel* + adjective (not *feel* + noun), and pick up vocabulary for moods like *homesick*, *confident*, and *proud*.",
-        "summaryDari": "امینه امتحان بزرگی در پیش دارد و هم هیجان‌زده و هم عصبی است — راهی خوب برای یادگیری *feel* + صفت (نه *feel* + اسم)، و یادگیری واژگان حالت‌های روحی مانند *homesick*، *confident* و *proud*."
+        "summaryDari": "امینه امتحان بزرگی در پیش دارد و هم هیجان‌زده و هم عصبی است — راهی خوب برای یادگیری *feel* + صفت (نه *feel* + اسم)، و یادگیری واژگان حالت‌های روحی مانند *homesick*، *confident* و *proud*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that correctly uses feel + adjective.",
+              "qDari": "کدام جمله «feel + adjective» (احساس + صفت) را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "She feels nervously about the exam.",
+                "She feels nervous about the exam.",
+                "She is feel nervous about the exam.",
+                "She feels nervousness about the exam."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which feeling does Amina say she has about her own progress?",
+              "qDari": "امینه می‌گوید نسبت به پیشرفت خودش چه احساسی دارد؟",
+              "options": [
+                "Proud",
+                "Worried",
+                "Homesick",
+                "Relieved"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What is Amina grateful for, according to her phone call with her husband?",
+              "qDari": "طبق تماس تلفنی امینه با شوهرش، او بابت چه چیزی سپاسگزار است؟",
+              "options": [
+                "Having the chance to try again",
+                "Getting a new job",
+                "Moving to a new city",
+                "Having more free time"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe how Amina feels about her upcoming exam, and what Yusuf shares with her to help her feel less alone.",
+              "promptDari": "به زبان خودتان توضیح دهید امینه نسبت به امتحان پیش رویش چه احساسی دارد و یوسف چه چیزی را با او در میان می‌گذارد تا کمکش کند کمتر احساس تنهایی کند."
+            },
+            {
+              "promptEn": "In your own words, describe what happens on Amina's exam day, from when she arrives at the testing room to when she learns her results.",
+              "promptDari": "به زبان خودتان توضیح دهید در روز امتحان امینه چه اتفاقاتی رخ می‌دهد، از زمانی که به اتاق امتحان می‌رسد تا زمانی که نتیجه‌اش را می‌فهمد."
+            }
+          ]
+        }
       },
       {
         "id": 7,
@@ -2741,7 +3031,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "It's flu season and half the class looks worn out — practice asking \"How are you feeling?\" or \"How do you feel?\" and answering naturally with words like *exhausted*, *sore*, and *better*.",
-        "summaryDari": "فصل آنفلوانزا است و نیم صنف خسته به‌نظر می‌رسد — تمرین کنید که بپرسید «How are you feeling?» یا «How do you feel?» و طبیعی جواب بدهید با کلماتی مانند *exhausted*، *sore* و *better*."
+        "summaryDari": "فصل آنفلوانزا است و نیم صنف خسته به‌نظر می‌رسد — تمرین کنید که بپرسید «How are you feeling?» یا «How do you feel?» و طبیعی جواب بدهید با کلماتی مانند *exhausted*، *sore* و *better*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which question correctly asks about someone's feelings?",
+              "qDari": "کدام سوال به‌درستی درباره احساس یک شخص می‌پرسد؟",
+              "options": [
+                "How you are feeling?",
+                "How are you feeling?",
+                "How feeling you are?",
+                "Are you how feeling?"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which word best describes how Mei looks and feels in class that night?",
+              "qDari": "کدام کلمه بهتر توصیف می‌کند که می آن شب در صنف چه حالی دارد؟",
+              "options": [
+                "Exhausted",
+                "Sore",
+                "Energetic",
+                "Stressed"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "What does Mei's mother say she wants to do when she moves to New York?",
+              "qDari": "مادر می می‌گوید وقتی به نیویورک نقل‌مکان کند، می‌خواهد چه کار کند؟",
+              "options": [
+                "Open her own bakery",
+                "See Mei's bakery and meet her friends",
+                "Start English classes right away",
+                "Move back to Taiwan soon"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe how Diego, Yusuf, and Mei each feel at the start of class that night, and explain why Grace decides to keep the lesson calm and easy.",
+              "promptDari": "به زبان خودتان توضیح دهید دیه‌گو، یوسف و می هرکدام در ابتدای صنف آن شب چه احساسی دارند، و توضیح دهید چرا گریس تصمیم می‌گیرد درس را آرام و آسان نگه دارد."
+            },
+            {
+              "promptEn": "In your own words, describe the phone call between Mei and her mother. How does her mother feel, and what is she most looking forward to about moving to New York?",
+              "promptDari": "به زبان خودتان تماس تلفنی بین می و مادرش را توضیح دهید. مادرش چه احساسی دارد و بیشتر از همه منتظر چه چیزی درباره نقل‌مکان به نیویورک است؟"
+            }
+          ]
+        }
       },
       {
         "id": 8,
@@ -3020,7 +3357,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Ride along on Yusuf's crowded subway commute to Long Island City, learning to say *by subway*, *by bus*, or *on foot*, and vocabulary for getting around like *platform*, *transfer*, and *delay*.",
-        "summaryDari": "همراه یوسف در ازدحام مترو به سمت لانگ آیلند سیتی سفر کنید، یاد بگیرید که چطور بگویید *by subway*، *by bus* یا *on foot*، و واژگان رفت‌وآمد مانند *platform*، *transfer* و *delay* را بیاموزید."
+        "summaryDari": "همراه یوسف در ازدحام مترو به سمت لانگ آیلند سیتی سفر کنید، یاد بگیرید که چطور بگویید *by subway*، *by bus* یا *on foot*، و واژگان رفت‌وآمد مانند *platform*، *transfer* و *delay* را بیاموزید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly describes how Mei gets to work?",
+              "qDari": "کدام جمله به‌درستی توصیف می‌کند که می چطور به کارش می‌رود؟",
+              "options": [
+                "Mei goes by foot to her bakery.",
+                "Mei goes on foot to her bakery.",
+                "Mei goes by on foot to her bakery.",
+                "Mei goes foot to her bakery."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What does Diego do to reach his college?",
+              "qDari": "دیه‌گو برای رسیدن به کالجش چه کار می‌کند؟",
+              "options": [
+                "He takes a bus the whole way",
+                "He transfers from the N train to the 7 train",
+                "He drives his own car",
+                "He walks the entire distance"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What does Diego do after the train starts moving again, to avoid being late?",
+              "qDari": "دیه‌گو بعد از اینکه قطار دوباره حرکت می‌کند، برای اینکه دیر نرسد چه کار می‌کند؟",
+              "options": [
+                "He gives up and goes home",
+                "He runs and dodges commuters to cross the crosswalk on time",
+                "He calls his professor to say he will be late",
+                "He decides to skip the presentation"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, compare how Yusuf, Diego, Mei, and Grace each travel to work or school every day. How is Yusuf's ride different from Diego's?",
+              "promptDari": "به زبان خودتان مقایسه کنید که یوسف، دیه‌گو، می و گریس هرکدام هر روز چطور به کار یا مکتب/کالج می‌روند. سفر یوسف چطور با سفر دیه‌گو فرق دارد؟"
+            },
+            {
+              "promptEn": "In your own words, describe what happens to Diego on his way to his presentation, and explain what Amina means when she says 'every commuter has a story like that.'",
+              "promptDari": "به زبان خودتان توضیح دهید در راه دیه‌گو به‌سوی ارائه‌اش چه اتفاقی می‌افتد، و توضیح دهید امینه وقتی می‌گوید «هر مسافر روزانه یک داستان مثل این دارد» منظورش چیست."
+            }
+          ]
+        }
       },
       {
         "id": 9,
@@ -3317,7 +3701,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Mei's bakery is open every day except Sunday — the perfect setup for practicing adverbs of frequency (*always*, *usually*, *rarely*, *never*) placed before the main verb, plus how to describe an *exception* with \"except.\"",
-        "summaryDari": "نانوایی می هر روز بجز یکشنبه باز است — زمینه‌ای عالی برای تمرین قیدهای تکرار (*always*، *usually*، *rarely*، *never*) که پیش از فعل اصلی می‌آیند، و همچنین چگونگی بیان *استثنا* با «except»."
+        "summaryDari": "نانوایی می هر روز بجز یکشنبه باز است — زمینه‌ای عالی برای تمرین قیدهای تکرار (*always*، *usually*، *rarely*، *never*) که پیش از فعل اصلی می‌آیند، و همچنین چگونگی بیان *استثنا* با «except».",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence uses an adverb of frequency correctly?",
+              "qDari": "کدام جمله یک قید تکرار (adverb of frequency) را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "She usually is arriving early.",
+                "She always arrive early.",
+                "She usually arrives early.",
+                "Usually she arrives is early."
+              ],
+              "correct": 2
+            },
+            {
+              "q": "According to the passage, when does Yusuf usually get extra time off from the garage?",
+              "qDari": "طبق متن، یوسف معمولاً چه زمانی از گراج وقت رخصتی اضافی می‌گیرد؟",
+              "options": [
+                "Only on weekdays",
+                "Except during slow weeks at the garage",
+                "Only on Sundays",
+                "He never gets time off"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "How long does Yusuf's Sunday call with Zahra usually last, except when the internet is bad?",
+              "qDari": "تماس یکشنبه یوسف با زهرا معمولاً چقدر طول می‌کشد، به‌جز وقتی که اینترنت خراب باشد؟",
+              "options": [
+                "Less than ten minutes",
+                "Rarely less than an hour",
+                "Exactly thirty minutes",
+                "It never happens"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe Mei's, Grace's, and Yusuf's weekly routines. Which days are exceptions to their usual routines, and why?",
+              "promptDari": "به زبان خودتان روال هفتگی می، گریس و یوسف را توضیح دهید. کدام روزها استثنا از روال معمول آن‌هاست و چرا؟"
+            },
+            {
+              "promptEn": "In your own words, describe Yusuf's Sunday routine with his sister Zahra. What do they usually talk about, and why does Yusuf say it is the best hour of his week?",
+              "promptDari": "به زبان خودتان روال یکشنبه‌های یوسف با خواهرش زهرا را توضیح دهید. آن‌ها معمولاً درباره چه چیزی صحبت می‌کنند و چرا یوسف می‌گوید این بهترین ساعت هفته‌اش است؟"
+            }
+          ]
+        }
       },
       {
         "id": 10,
@@ -3608,7 +4039,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Before class, everyone is complaining about small aches — a natural way to practice \"my/his/her + body part + hurts\" and \"I have a pain in my...\" while learning body vocabulary like *shoulder*, *knee*, and *wrist*.",
-        "summaryDari": "پیش از صنف، همه از دردهای کوچک شکایت می‌کنند — راهی طبیعی برای تمرین «my/his/her + عضو بدن + hurts» و «I have a pain in my...» همراه با یادگیری واژگان بدن مانند *shoulder*، *knee* و *wrist*."
+        "summaryDari": "پیش از صنف، همه از دردهای کوچک شکایت می‌کنند — راهی طبیعی برای تمرین «my/his/her + عضو بدن + hurts» و «I have a pain in my...» همراه با یادگیری واژگان بدن مانند *shoulder*، *knee* و *wrist*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly describes physical pain?",
+              "qDari": "کدام جمله به‌درستی درد جسمی را توصیف می‌کند؟",
+              "options": [
+                "Mei back hurts.",
+                "Mei's back hurts.",
+                "Mei has hurts in back.",
+                "Mei is hurting back."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Why does Amina's wrist hurt?",
+              "qDari": "چرا مچ دست امینه درد می‌کند؟",
+              "options": [
+                "From typing all day",
+                "From carrying grocery bags",
+                "From lifting car parts",
+                "From climbing subway stairs"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which body part does Yusuf injure at the garage, and what does the doctor's note tell him to do?",
+              "qDari": "یوسف در گراج کدام قسمت بدنش را صدمه می‌زند و یادداشت داکتر به او می‌گوید چه کار کند؟",
+              "options": [
+                "His ankle; rest it and use ice",
+                "His wrist; keep working as usual",
+                "His knee; go to the hospital immediately",
+                "His elbow; ignore the pain"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe each classmate's ache before class that evening — Mei, Grace, Amina, Yusuf, and Diego — and explain which body part hurts for each person and why.",
+              "promptDari": "به زبان خودتان درد هرکدام از همصنفی‌ها را پیش از صنف آن شام توضیح دهید — می، گریس، امینه، یوسف و دیه‌گو — و بگویید کدام قسمت بدن هرکدام درد می‌کند و چرا."
+            },
+            {
+              "promptEn": "In your own words, describe what happens to Yusuf at the garage, and explain how Amina helps him understand the doctor's instructions.",
+              "promptDari": "به زبان خودتان توضیح دهید در گراج چه اتفاقی برای یوسف می‌افتد و امینه چطور به او کمک می‌کند دستورات داکتر را بفهمد."
+            }
+          ]
+        }
       }
     ]
   },
@@ -3901,7 +4379,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Diego walks into class looking unwell — practice asking \"What's the matter?\" and answering with \"I have a...\" while learning illness vocabulary like *headache*, *fever*, and *sore throat*.",
-        "summaryDari": "دیه‌گو ناخوش وارد صنف می‌شود — تمرین کنید که بپرسید «What's the matter?» و جواب بدهید با «I have a...» همراه با یادگیری واژگان بیماری مانند *headache*، *fever* و *sore throat*."
+        "summaryDari": "دیه‌گو ناخوش وارد صنف می‌شود — تمرین کنید که بپرسید «What's the matter?» و جواب بدهید با «I have a...» همراه با یادگیری واژگان بیماری مانند *headache*، *fever* و *sore throat*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "In the first passage, what does Diego say hurts a little, besides his head?",
+              "qDari": "در متن اول، دیه‌گو می‌گوید علاوه بر سرش، کدام قسمت بدنش کمی درد می‌کند؟",
+              "options": [
+                "His stomach",
+                "His throat",
+                "His leg",
+                "His eyes"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which sentence correctly follows the pattern 'I have a + illness'?",
+              "qDari": "کدام جمله الگوی «I have a + illness» را به‌درستی دنبال می‌کند؟",
+              "options": [
+                "I have a headache.",
+                "I having a headache.",
+                "I have a happy.",
+                "I am has a headache."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Why does Mei bring Diego soup instead of just tea?",
+              "qDari": "چرا می به‌جای فقط چای، برای دیه‌گو شوربا می‌آورد؟",
+              "options": [
+                "She thinks soup helps more than tea",
+                "She doesn't have any tea",
+                "Grace asked her to",
+                "Diego doesn't like tea"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Diego, Grace, and Amina each react differently when Diego doesn't feel well. In your own words, describe what each of them does or says to help him.",
+              "promptDari": "دیه‌گو، گریس و امینه هرکدام وقتی دیه‌گو حالش خوب نیست واکنش متفاوتی نشان می‌دهند. به زبان خودتان توضیح دهید هرکدام از آن‌ها چه کاری می‌کنند یا چه می‌گویند تا به او کمک کنند."
+            },
+            {
+              "promptEn": "Mei says, 'In Astoria, when someone doesn't feel well, their neighbors take care of them.' In your own words, explain what Mei does for Diego that night, and what this shows about the neighborhood.",
+              "promptDari": "می می‌گوید: «در آستوریا، وقتی کسی حالش خوب نیست، همسایه‌هایش از او مراقبت می‌کنند.» به زبان خودتان توضیح دهید می آن شب برای دیه‌گو چه کاری انجام می‌دهد و این موضوع چه چیزی را درباره این محله نشان می‌دهد."
+            }
+          ]
+        }
       },
       {
         "id": 12,
@@ -4186,7 +4711,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "A big storm is forecast for New York this weekend — the perfect moment to practice \"It's + adjective\" (It's cold) and \"It's + verb-ing\" (It's raining) with weather words like *forecast*, *storm*, and *freezing*.",
-        "summaryDari": "پیش‌بینی می‌شود این آخر هفته طوفان بزرگی به نیویورک برسد — بهترین فرصت برای تمرین «It's + صفت» (It's cold) و «It's + verb-ing» (It's raining) با کلمات آب‌وهوا مانند *forecast*، *storm* و *freezing*."
+        "summaryDari": "پیش‌بینی می‌شود این آخر هفته طوفان بزرگی به نیویورک برسد — بهترین فرصت برای تمرین «It's + صفت» (It's cold) و «It's + verb-ing» (It's raining) با کلمات آب‌وهوا مانند *forecast*، *storm* و *freezing*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "According to the forecast in the first passage, what is supposed to happen by Friday?",
+              "qDari": "به گفته پیش‌بینی هوا در متن اول، تا جمعه قرار است چه اتفاقی بیفتد؟",
+              "options": [
+                "It will be freezing and windy",
+                "It will be sunny and warm",
+                "It will rain lightly",
+                "Nothing unusual will happen"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly uses 'It's + verb-ing' to describe the weather?",
+              "qDari": "کدام جمله از الگوی «It's + verb-ing» برای توصیف آب‌وهوا به‌درستی استفاده می‌کند؟",
+              "options": [
+                "It's raining outside.",
+                "It's rain outside.",
+                "It's rains outside.",
+                "It rain outside."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Why does Mei close her bakery two hours early during the storm?",
+              "qDari": "چرا می در جریان توفان، نانوایی‌اش را دو ساعت زودتر می‌بندد؟",
+              "options": [
+                "She is out of bread",
+                "It is too dangerous for customers to walk on the icy sidewalk",
+                "Yusuf asked her to close",
+                "The storm knocked out the electricity"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Different characters react differently to news of the coming storm. In your own words, describe how Yusuf, Mei, Grace, and Diego each react to the forecast.",
+              "promptDari": "شخصیت‌های مختلف به خبر توفان در راه، واکنش‌های متفاوتی نشان می‌دهند. به زبان خودتان توضیح دهید یوسف، می، گریس و دیه‌گو هرکدام چطور به این پیش‌بینی واکنش نشان می‌دهند."
+            },
+            {
+              "promptEn": "In your own words, describe what Yusuf and Mei do to help their elderly neighbor during the storm, and what Yusuf says about winters in Kabul.",
+              "promptDari": "به زبان خودتان توضیح دهید یوسف و می در جریان توفان چطور به همسایه پیرشان کمک می‌کنند و یوسف درباره زمستان‌های کابل چه می‌گوید."
+            }
+          ]
+        }
       },
       {
         "id": 13,
@@ -4489,7 +5061,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace and Diego chat about the weather while waiting for the bus — practice asking \"What's the weather like?\" and answering with \"It's + adjective,\" using words like *sunny*, *chilly*, and *foggy*.",
-        "summaryDari": "گریس و دیه‌گو در انتظار موتر سرویس درباره آب‌وهوا صحبت می‌کنند — تمرین کنید بپرسید «What's the weather like?» و جواب بدهید با «It's + صفت»، با کلماتی مانند *sunny*، *chilly* و *foggy*."
+        "summaryDari": "گریس و دیه‌گو در انتظار موتر سرویس درباره آب‌وهوا صحبت می‌کنند — تمرین کنید بپرسید «What's the weather like?» و جواب بدهید با «It's + صفت»، با کلماتی مانند *sunny*، *chilly* و *foggy*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "What is the weather like near the river, according to Grace?",
+              "qDari": "به گفته گریس، هوا نزدیک رودخانه چطور است؟",
+              "options": [
+                "Foggy",
+                "Pouring rain",
+                "Icy",
+                "Chilly"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which question correctly asks about the weather?",
+              "qDari": "کدام سوال به‌درستی درباره آب‌وهوا می‌پرسد؟",
+              "options": [
+                "What's the weather like?",
+                "What's weather like?",
+                "How the weather like?",
+                "What weather is like?"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "How does Amina describe the evening sky in Syria?",
+              "qDari": "امینه آسمان شام در سوریه را چطور توصیف می‌کند؟",
+              "options": [
+                "Usually foggy",
+                "Usually cloudy",
+                "Usually clear",
+                "Always pouring rain"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Grace and Diego talk about the weather changing throughout the week. In your own words, describe how the weather changes from Monday to Thursday, according to their conversation.",
+              "promptDari": "گریس و دیه‌گو درباره تغییر آب‌وهوا در طول هفته صحبت می‌کنند. به زبان خودتان توضیح دهید طبق گفتگوی آن‌ها، هوا از دوشنبه تا پنج‌شنبه چطور تغییر می‌کند."
+            },
+            {
+              "promptEn": "Lina asks her mother about the weather in Syria. In your own words, explain how Amina describes the weather there, and how she feels about missing it.",
+              "promptDari": "لینا از مادرش درباره هوای سوریه می‌پرسد. به زبان خودتان توضیح دهید امینه هوای آنجا را چطور توصیف می‌کند و او درباره دلتنگی برای آن چه احساسی دارد."
+            }
+          ]
+        }
       },
       {
         "id": 14,
@@ -4774,7 +5393,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Yusuf gets exciting news — his sister Zahra's visa came through — and you'll learn travel vocabulary like *passport*, *suitcase*, and *journey*, plus how to say \"get a visa\" and \"take a flight.\"",
-        "summaryDari": "یوسف خبر هیجان‌انگیزی می‌گیرد — ویزای خواهرش زهرا صادر شده — و شما واژگان سفر مانند *passport*، *suitcase* و *journey* را یاد می‌گیرید، همراه با چگونگی گفتن «get a visa» و «take a flight»."
+        "summaryDari": "یوسف خبر هیجان‌انگیزی می‌گیرد — ویزای خواهرش زهرا صادر شده — و شما واژگان سفر مانند *passport*، *suitcase* و *journey* را یاد می‌گیرید، همراه با چگونگی گفتن «get a visa» و «take a flight».",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "What two travel documents does Zahra already have ready, according to Yusuf?",
+              "qDari": "به گفته یوسف، زهرا کدام دو سند سفر را از قبل آماده دارد؟",
+              "options": [
+                "Her passport and a suitcase",
+                "Her visa and a ticket",
+                "Her passport and a ticket",
+                "A suitcase and a map"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly uses 'get a' or 'have a' with a travel document?",
+              "qDari": "کدام جمله «get a» یا «have a» را با یک سند سفر به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Zahra got a visa.",
+                "Zahra got a visa is.",
+                "Zahra having visa.",
+                "Zahra get is a visa."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "How long does immigration take when Zahra arrives at JFK?",
+              "qDari": "وقتی زهرا به جی‌اف‌کی می‌رسد، اداره مهاجرت چقدر وقت می‌گیرد؟",
+              "options": [
+                "About forty minutes",
+                "About ten minutes",
+                "About three hours",
+                "It is instant"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Yusuf shares good news with the whole class. In your own words, describe what the news is and how each classmate reacts.",
+              "promptDari": "یوسف خبر خوشی را با تمام صنف در میان می‌گذارد. به زبان خودتان توضیح دهید این خبر چیست و هر همصنفی چطور واکنش نشان می‌دهد."
+            },
+            {
+              "promptEn": "In your own words, describe the moment Yusuf and Zahra are reunited at JFK airport, and how Zahra first describes New York.",
+              "promptDari": "به زبان خودتان لحظه دیدار دوباره یوسف و زهرا در میدان هوایی جی‌اف‌کی را توصیف کنید و بگویید زهرا در همان اول نیویورک را چطور توصیف می‌کند."
+            }
+          ]
+        }
       },
       {
         "id": 15,
@@ -5071,7 +5737,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Newly arrived Zahra compares New York to Kabul — everything feels *bigger* and *busier* — while you practice adding -er (+ than) to short adjectives and \"more + adjective + than\" for longer ones.",
-        "summaryDari": "زهرا که تازه رسیده، نیویورک را با کابل مقایسه می‌کند — همه‌چیز *بزرگ‌تر* و *شلوغ‌تر* به‌نظر می‌رسد — و شما تمرین می‌کنید که -er (+ than) را به صفات کوتاه اضافه کنید و «more + صفت + than» را برای صفات بلندتر به‌کار ببرید."
+        "summaryDari": "زهرا که تازه رسیده، نیویورک را با کابل مقایسه می‌کند — همه‌چیز *بزرگ‌تر* و *شلوغ‌تر* به‌نظر می‌رسد — و شما تمرین می‌کنید که -er (+ than) را به صفات کوتاه اضافه کنید و «more + صفت + than» را برای صفات بلندتر به‌کار ببرید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "According to Zahra, how does Astoria feel compared to Manhattan?",
+              "qDari": "به گفته زهرا، آستوریا در مقایسه با منهتن چطور احساس می‌شود؟",
+              "options": [
+                "Smaller and quieter",
+                "Bigger and busier",
+                "More expensive and crowded",
+                "Exactly the same"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly compares two things using '-er than'?",
+              "qDari": "کدام جمله دو چیز را با استفاده از «-er than» به‌درستی مقایسه می‌کند؟",
+              "options": [
+                "New York is bigger than Kabul.",
+                "New York is more bigger than Kabul.",
+                "New York is big than Kabul.",
+                "New York is biggest than Kabul."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What advice does Mei give Diego about choosing a location for a new business?",
+              "qDari": "می درباره انتخاب موقعیت برای یک تجارت جدید به دیه‌گو چه مشوره‌ای می‌دهد؟",
+              "options": [
+                "Always pick the busiest, most expensive street",
+                "A cheaper, quieter spot with loyal customers can be safer",
+                "Rent doesn't matter at all",
+                "Never open a business in Astoria"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Zahra compares her new life in New York to her life in Kabul. In your own words, describe the comparisons she makes, and how she feels about her new apartment.",
+              "promptDari": "زهرا زندگی جدیدش در نیویورک را با زندگی‌اش در کابل مقایسه می‌کند. به زبان خودتان مقایسه‌هایی که او می‌کند را توضیح دهید و بگویید او درباره آپارتمان جدیدش چه احساسی دارد."
+            },
+            {
+              "promptEn": "Diego visits three restaurants for his business project. In your own words, explain what Mei teaches him about comparing a busier street to a quieter one.",
+              "promptDari": "دیه‌گو برای پروژه تجارتش به سه رستورانت سر می‌زند. به زبان خودتان توضیح دهید می به او درباره مقایسه یک خیابان شلوغ‌تر با یک خیابان آرام‌تر چه چیزی یاد می‌دهد."
+            }
+          ]
+        }
       }
     ]
   },
@@ -5364,7 +6077,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace treats the class to a holiday outing into Manhattan — perfect for practicing 'the' + adjective + -est (the tallest) or 'the most' + adjective (the most diverse) to describe the extremes of a group.",
-        "summaryDari": "گریس صنف را به یک گشت‌وگذار تعطیلاتی در منهتن دعوت می‌کند — فرصتی عالی برای تمرین 'the' + صفت + -est (the tallest) یا 'the most' + صفت (the most diverse) برای توصیف نهایت‌های یک گروه."
+        "summaryDari": "گریس صنف را به یک گشت‌وگذار تعطیلاتی در منهتن دعوت می‌کند — فرصتی عالی برای تمرین 'the' + صفت + -est (the tallest) یا 'the most' + صفت (the most diverse) برای توصیف نهایت‌های یک گروه.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses 'the' + superlative to talk about one of three or more things?",
+              "qDari": "کدام جمله به‌درستی از 'the' + صفت عالی برای صحبت درباره یکی از سه یا چند چیز استفاده می‌کند؟",
+              "options": [
+                "The Empire State Building is more tall than Grand Central.",
+                "The Empire State Building was one of the tallest buildings in the world.",
+                "The Empire State Building is tall than every building.",
+                "The Empire State Building is most tall building."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "According to the first passage, why does Yusuf call Grand Central Terminal 'the busiest place' he's been in New York?",
+              "qDari": "طبق متن اول، چرا یوسف ترمینال گرند سنترال را «شلوغ‌ترین جایی» می‌نامد که در نیویورک بوده؟",
+              "options": [
+                "Because thousands of people move in every direction there",
+                "Because it has the best food in the city",
+                "Because it is the oldest building in Manhattan",
+                "Because no one else was there that day"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "In the second passage, what does Zahra say about the cake Yusuf brought home from Mei's bakery?",
+              "qDari": "در متن دوم، زهرا درباره کیکی که یوسف از نانوایی می به خانه آورده بود چه می‌گوید؟",
+              "options": [
+                "It was too sweet for her to eat",
+                "It was the sweetest cake she has ever tasted",
+                "It was the worst cake she has tried",
+                "She never got to try it"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the class outing to Manhattan. What does Diego say about the Empire State Building, and what does Grace say about Queens at the end?",
+              "promptDari": "به زبان خودتان گشت‌وگذار صنفی به منهتن را توصیف کنید. دیه‌گو درباره ساختمان امپایر استیت چه می‌گوید و گریس در پایان درباره کوینز چه می‌گوید؟"
+            },
+            {
+              "promptEn": "Describe, in your own words, the friendly argument at dinner in Astoria. What do Diego and Mei each claim is 'the best,' and what does Grace call this kind of conversation?",
+              "promptDari": "به زبان خودتان بحث دوستانه سر نان شام در آستوریا را توصیف کنید. دیه‌گو و می هرکدام چه چیزی را «بهترین» می‌دانند و گریس این نوع مکالمه را چه می‌نامد؟"
+            }
+          ]
+        }
       },
       {
         "id": 17,
@@ -5649,7 +6409,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Walk along the waterfront in Astoria Park with Amina's and Yusuf's families as you practice 'there is/are' for geographical features and prepositions like *across from*, *along*, and *next to* to say exactly where things are.",
-        "summaryDari": "همراه خانواده‌های امینه و یوسف در امتداد ساحل در پارک آستوریا قدم بزنید و 'there is/are' را برای ویژگی‌های جغرافیایی و حروف اضافه‌ای مانند *across from*، *along* و *next to* برای گفتن دقیق موقعیت تمرین کنید."
+        "summaryDari": "همراه خانواده‌های امینه و یوسف در امتداد ساحل در پارک آستوریا قدم بزنید و 'there is/are' را برای ویژگی‌های جغرافیایی و حروف اضافه‌ای مانند *across from*، *along* و *next to* برای گفتن دقیق موقعیت تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses 'there is/are' with a preposition to describe location?",
+              "qDari": "کدام جمله به‌درستی از 'there is/are' همراه با حرف‌اضافه برای توصیف مکان استفاده می‌کند؟",
+              "options": [
+                "There skyline is across the water.",
+                "There is a long path next to the East River.",
+                "Is there a path along?",
+                "The path there is next the river."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "In the first passage, what does Amina point out across the water while they walk in Astoria Park?",
+              "qDari": "در متن اول، امینه هنگام قدم‌زدن در پارک آستوریا چه چیزی را آن‌طرف آب نشان می‌دهد؟",
+              "options": [
+                "A new bridge under construction",
+                "The Manhattan skyline",
+                "A group of boats",
+                "Another park"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "According to the second passage, what did millions of immigrants pass through before entering New York City?",
+              "qDari": "طبق متن دوم، ملیون‌ها مهاجر پیش از ورود به شهر نیویورک از کجا رد می‌شدند؟",
+              "options": [
+                "A busy neighborhood market",
+                "Ellis Island, near the harbor",
+                "A large coastal park",
+                "The Long Island coast"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the walk through Astoria Park. What does Amina show Zahra across the water, and what does Yusuf explain about Queens and Long Island?",
+              "promptDari": "به زبان خودتان قدم‌زدن در پارک آستوریا را توصیف کنید. امینه آن‌طرف آب چه چیزی را به زهرا نشان می‌دهد و یوسف درباره کوینز و لانگ آیلند چه توضیحی می‌دهد؟"
+            },
+            {
+              "promptEn": "Describe, in your own words, what Yusuf tells Zahra about Ellis Island. Why does Zahra compare the immigrants' journeys to her own, and what does Amina say makes the city feel like home?",
+              "promptDari": "به زبان خودتان توضیح دهید یوسف درباره جزیره الیس به زهرا چه می‌گوید. چرا زهرا سفرهای مهاجرین را با سفر خودش مقایسه می‌کند و امینه می‌گوید چه چیزی این شهر را شبیه خانه می‌سازد؟"
+            }
+          ]
+        }
       },
       {
         "id": 18,
@@ -5952,7 +6759,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Diego weighs two real options for his future restaurant — one street or another — while you practice 'would rather' + the base verb for preferences and 'either... or' for presenting two choices.",
-        "summaryDari": "دیه‌گو بین دو گزینه واقعی برای رستوران آینده‌اش فکر می‌کند — یک خیابان یا دیگری — و شما 'would rather' + فعل ساده را برای ترجیحات و 'either... or' را برای ارائه دو گزینه تمرین می‌کنید."
+        "summaryDari": "دیه‌گو بین دو گزینه واقعی برای رستوران آینده‌اش فکر می‌کند — یک خیابان یا دیگری — و شما 'would rather' + فعل ساده را برای ترجیحات و 'either... or' را برای ارائه دو گزینه تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses 'would rather' to express a preference?",
+              "qDari": "کدام جمله به‌درستی از 'would rather' برای بیان یک ترجیح استفاده می‌کند؟",
+              "options": [
+                "I would rather to start small.",
+                "I would rather starting small.",
+                "I would rather start small.",
+                "I rather would start small."
+              ],
+              "correct": 2
+            },
+            {
+              "q": "In the first passage, why does Diego decide he would rather start his restaurant small?",
+              "qDari": "در متن اول، چرا دیه‌گو تصمیم می‌گیرد ترجیح دهد رستورانتش را کوچک شروع کند؟",
+              "options": [
+                "Because it is a smaller opportunity but a safer choice",
+                "Because Mei told him to close the bakery",
+                "Because 30th Avenue has no customers at all",
+                "Because he has no savings at all"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "In the second passage, what does Zahra decide about her two job options?",
+              "qDari": "در متن دوم، زهرا درباره دو گزینه شغلی‌اش چه تصمیمی می‌گیرد؟",
+              "options": [
+                "She would rather have less money now and more opportunity later",
+                "She would rather quit English class completely",
+                "She takes the factory job for the higher pay",
+                "She decides not to work at all"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe Diego's two restaurant location choices. What does he decide, and how does Mei's own story help him make up his mind?",
+              "promptDari": "به زبان خودتان دو گزینه دیه‌گو برای مکان رستورانتش را توصیف کنید. او چه تصمیمی می‌گیرد و داستان خود می چگونه به او در تصمیم‌گیری کمک می‌کند؟"
+            },
+            {
+              "promptEn": "Describe, in your own words, the two job options Zahra is considering. What does Grace point out about them, and what final decision does Zahra make?",
+              "promptDari": "به زبان خودتان دو گزینه شغلی که زهرا در نظر دارد را توصیف کنید. گریس درباره آن‌ها چه نکته‌ای را بیان می‌کند و زهرا در نهایت چه تصمیمی می‌گیرد؟"
+            }
+          ]
+        }
       },
       {
         "id": 19,
@@ -6255,7 +7109,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Diego crunches real numbers for a business-class project — New York's population, his budget, his rent — while you practice grouping large numbers in threes and never adding -s to hundred, thousand, or million after a number.",
-        "summaryDari": "دیه‌گو برای یک پروژه صنف تجارت اعداد واقعی را بررسی می‌کند — جمعیت نیویورک، بودجه‌اش، کرایه‌اش — و شما تمرین می‌کنید که اعداد بزرگ را در گروه‌های سه‌رقمی بگویید و هرگز بعد از یک عدد به hundred، thousand یا million -s نیفزایید."
+        "summaryDari": "دیه‌گو برای یک پروژه صنف تجارت اعداد واقعی را بررسی می‌کند — جمعیت نیویورک، بودجه‌اش، کرایه‌اش — و شما تمرین می‌کنید که اعداد بزرگ را در گروه‌های سه‌رقمی بگویید و هرگز بعد از یک عدد به hundred، thousand یا million -s نیفزایید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses a large number?",
+              "qDari": "کدام جمله یک عدد بزرگ را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "New York City has about eight millions people.",
+                "New York City has about eight million people.",
+                "New York City has about eight million of people.",
+                "New York City has about eight-millions people."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "According to the first passage, what is included in Diego's restaurant budget?",
+              "qDari": "طبق متن اول، بودجه رستورانت دیه‌گو شامل چه مواردی است؟",
+              "options": [
+                "Only a salary for himself",
+                "Rent, startup costs, and a salary for one employee",
+                "A loan from the bank",
+                "Free equipment from his professor"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "In the second passage, why is Mei finally able to relax about her mother's move?",
+              "qDari": "در متن دوم، چرا می بالاخره درباره نقل‌مکان مادرش خیالش راحت می‌شود؟",
+              "options": [
+                "Her mother decided not to come",
+                "She checks her savings account and finds she finally has enough",
+                "The flight became free",
+                "She borrowed money from Diego"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, explain Diego's restaurant budget project. What numbers does he use for population and costs, and how much does he currently have in savings?",
+              "promptDari": "به زبان خودتان پروژه بودجه رستورانت دیه‌گو را توضیح دهید. او از چه اعدادی برای جمعیت و هزینه‌ها استفاده می‌کند و الان چقدر پس‌انداز دارد؟"
+            },
+            {
+              "promptEn": "Describe, in your own words, why Mei has been saving money and what she and Diego say about the twelve days before her mother arrives.",
+              "promptDari": "به زبان خودتان توضیح دهید چرا می پول پس‌انداز می‌کرده و او و دیه‌گو درباره دوازده روز باقی‌مانده تا رسیدن مادرش چه می‌گویند؟"
+            }
+          ]
+        }
       },
       {
         "id": 20,
@@ -6552,7 +7453,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace marks a calendar of upcoming dates, including Zahra's first American Thanksgiving, as you practice ordinal numbers with dates: \"on the twelfth of December\" or \"on December twelfth.\"",
-        "summaryDari": "گریس تقویمی از تاریخ‌های پیش‌رو، از جمله اولین شکرگزاری زهرا در امریکا، علامت می‌زند و شما اعداد ترتیبی را با تاریخ‌ها تمرین می‌کنید: «on the twelfth of December» یا «on December twelfth»."
+        "summaryDari": "گریس تقویمی از تاریخ‌های پیش‌رو، از جمله اولین شکرگزاری زهرا در امریکا، علامت می‌زند و شما اعداد ترتیبی را با تاریخ‌ها تمرین می‌کنید: «on the twelfth of December» یا «on December twelfth».",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses an ordinal number to state a date?",
+              "qDari": "کدام جمله به‌درستی از یک عدد ترتیبی برای بیان تاریخ استفاده می‌کند؟",
+              "options": [
+                "The project is due on the fifteen.",
+                "The project is due on the fifteenth.",
+                "The project is due on fifteen of the month.",
+                "The project is due at fifteenth."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "According to the first passage, what three important dates does Grace mark on the calendar?",
+              "qDari": "طبق متن اول، گریس چه سه تاریخ مهمی را روی تقویم علامت می‌زند؟",
+              "options": [
+                "Thanksgiving, Mei's mother's arrival, and Diego's deadline",
+                "Three birthdays",
+                "Three holidays",
+                "Zahra's exam, a wedding, and a trip"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "In the second passage, what does Zahra say about the Thanksgiving gathering?",
+              "qDari": "در متن دوم، زهرا درباره جمع شدن روز شکرگزاری چه می‌گوید؟",
+              "options": [
+                "It is her first Thanksgiving and it looks like the whole world is at the table",
+                "It is too crowded and noisy",
+                "She misses her own country's food",
+                "She doesn't like the food"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the three important dates Grace marks on the calendar. Whose dates are they, and why does Grace call December a 'countdown' month?",
+              "promptDari": "به زبان خودتان سه تاریخ مهمی که گریس روی تقویم علامت می‌زند را توضیح دهید. این تاریخ‌ها متعلق به چه کسانی است و چرا گریس ماه دسامبر را ماه «شمارش معکوس» می‌نامد؟"
+            },
+            {
+              "promptEn": "Describe, in your own words, the Thanksgiving gathering at Grace's apartment. What dish does each person bring, and what is each person grateful for?",
+              "promptDari": "به زبان خودتان جمع‌شدن روز شکرگزاری در آپارتمان گریس را توصیف کنید. هرکس چه غذایی می‌آورد و هرکس بابت چه چیزی سپاسگزار است؟"
+            }
+          ]
+        }
       }
     ]
   },
@@ -6857,7 +7805,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "The class plays a game where everyone shares an important date — Lina's birthday, the day Mei opened her bakery — while you practice 'in' with years and months and 'on' with specific dates.",
-        "summaryDari": "صنف بازی می‌کند که در آن هرکس یک تاریخ مهم را بازگو می‌کند — روز تولد لینا، روزی که می نانوایی‌اش را باز کرد — و شما 'in' را با سال‌ها و ماه‌ها و 'on' را با تاریخ‌های دقیق تمرین می‌کنید."
+        "summaryDari": "صنف بازی می‌کند که در آن هرکس یک تاریخ مهم را بازگو می‌کند — روز تولد لینا، روزی که می نانوایی‌اش را باز کرد — و شما 'in' را با سال‌ها و ماه‌ها و 'on' را با تاریخ‌های دقیق تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that uses 'in' and 'on' correctly.",
+              "qDari": "کدام جمله 'in' و 'on' را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Yusuf arrived on 2023.",
+                "Yusuf arrived in 2023.",
+                "Yusuf arrived since 2023.",
+                "Yusuf arrived ago 2023."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Based on Grace's story, what does the word 'decade' mean?",
+              "qDari": "بر اساس داستان گریس، کلمه 'decade' به چه معناست؟",
+              "options": [
+                "A period of ten years",
+                "A single day",
+                "A period of one hundred years",
+                "A period of one month"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which date is always the same every year, according to Yusuf?",
+              "qDari": "کدام تاریخ هرسال همیشه یکسان است، به گفته یوسف؟",
+              "options": [
+                "Thanksgiving",
+                "New Year's Day (January 1st)",
+                "Zahra's birthday",
+                "Mei's bakery anniversary"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe Grace's class game about important dates. Choose two classmates and explain what dates they shared and why those dates matter to them.",
+              "promptDari": "به زبان خودتان بازی صنف گریس درباره تاریخ‌های مهم را توضیح دهید. دو همصنفی را انتخاب کنید و بگویید چه تاریخ‌هایی را شریک کردند و چرا این تاریخ‌ها برایشان مهم است."
+            },
+            {
+              "promptEn": "Zahra is learning to use American dates instead of the calendar she used in Kabul. In your own words, describe how Yusuf helps her, and explain how Zahra feels about her new life so far.",
+              "promptDari": "زهرا در حال یادگیری استفاده از تاریخ‌های امریکایی به‌جای تقویمی است که در کابل استفاده می‌کرد. به زبان خودتان توضیح دهید یوسف چطور به او کمک می‌کند و بگویید زهرا تا این‌جا درباره زندگی جدیدش چه احساسی دارد."
+            }
+          ]
+        }
       },
       {
         "id": 22,
@@ -7142,7 +8137,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "For homework, everyone writes about their past — Diego moved to New York for college, and more — while you practice adding -ed to regular verbs to talk about finished actions: move → moved, study → studied.",
-        "summaryDari": "برای کار خانگی، همه درباره گذشته‌شان می‌نویسند — دیه‌گو برای دانشگاه به نیویورک نقل مکان کرد، و بیشتر — و شما تمرین می‌کنید که -ed را به افعال باقاعده اضافه کنید تا کارهای تمام‌شده را بیان کنید: move → moved، study → studied."
+        "summaryDari": "برای کار خانگی، همه درباره گذشته‌شان می‌نویسند — دیه‌گو برای دانشگاه به نیویورک نقل مکان کرد، و بیشتر — و شما تمرین می‌کنید که -ed را به افعال باقاعده اضافه کنید تا کارهای تمام‌شده را بیان کنید: move → moved، study → studied.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that correctly uses the past tense of a regular verb.",
+              "qDari": "کدام جمله زمان گذشته یک فعل باقاعده را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Diego move to New York.",
+                "Diego moved to New York.",
+                "Diego moving to New York.",
+                "Diego moves to New York."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What did Amina do for twelve years before everything changed?",
+              "qDari": "امینه پیش از اینکه همه‌چیز تغییر کند، دوازده سال چه کاری کرد؟",
+              "options": [
+                "She studied business",
+                "She worked as a teacher",
+                "She opened a bakery",
+                "She traveled the world"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Why did Mei decide to open her own bakery?",
+              "qDari": "چرا می تصمیم گرفت نانوایی خودش را باز کند؟",
+              "options": [
+                "She saved money for two years and decided it was time",
+                "Her boss told her to",
+                "She won a competition",
+                "She followed her mother's advice"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Grace asked her students to write about their past. In your own words, describe what Diego and Amina wrote about their past, and explain how their stories are different.",
+              "promptDari": "گریس از محصلانش خواست درباره گذشته‌شان بنویسند. به زبان خودتان توضیح دهید دیه‌گو و امینه درباره گذشته‌شان چه نوشتند و بگویید داستان‌های آن‌ها چه تفاوتی با هم دارد."
+            },
+            {
+              "promptEn": "In your own words, describe Mei's journey from working in a bakery in Taipei to opening her own bakery in Astoria. What does Amina mean when she says some things follow us wherever we move?",
+              "promptDari": "به زبان خودتان مسیر می را از کار کردن در یک نانوایی در تایپه تا باز کردن نانوایی خودش در آستوریا توضیح دهید. منظور امینه از این حرف که «بعضی چیزها هرجا برویم دنبال ما می‌آیند» چیست؟"
+            }
+          ]
+        }
       },
       {
         "id": 23,
@@ -7439,7 +8481,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Mei's mother finally arrives and surprises everyone at the bakery — practice time words like *yesterday*, *last week*, and *last night* with the past simple to say exactly when something happened.",
-        "summaryDari": "مادر می سرانجام می‌رسد و همه را در نانوایی غافلگیر می‌کند — کلمات زمانی مانند *yesterday*، *last week* و *last night* را با زمان گذشته ساده تمرین کنید تا دقیقاً بگویید چیزی چه زمانی رخ داد."
+        "summaryDari": "مادر می سرانجام می‌رسد و همه را در نانوایی غافلگیر می‌کند — کلمات زمانی مانند *yesterday*، *last week* و *last night* را با زمان گذشته ساده تمرین کنید تا دقیقاً بگویید چیزی چه زمانی رخ داد.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that correctly uses a time word with the past simple.",
+              "qDari": "کدام جمله یک کلمهٔ زمان را با گذشته ساده به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Mei's mother arrived last week.",
+                "Mei's mother arrive last week.",
+                "Mei's mother arriving last week.",
+                "Mei's mother arrives last week."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Who cooked a dish for the group last night?",
+              "qDari": "شب گذشته چه کسانی برای گروه یک غذا پختند؟",
+              "options": [
+                "Amina and Lina",
+                "Yusuf and Zahra",
+                "Diego and Mei",
+                "Grace and Diego"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which word best describes how Diego felt when he read his professor's email?",
+              "qDari": "کدام کلمه بهترین توصیف احساس دیه‌گو وقتی ایمیل استادش را خواند است؟",
+              "options": [
+                "Surprised",
+                "Disappointed",
+                "Bored",
+                "Confused"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe what happened at Mei's apartment last night. Who came, and what did each person bring or do?",
+              "promptDari": "به زبان خودتان توضیح دهید شب گذشته در آپارتمان می چه اتفاقی افتاد. چه کسانی آمدند و هرکدام چه آوردند یا چه کاری کردند؟"
+            },
+            {
+              "promptEn": "Explain in your own words why Diego's news this morning was exciting, and what Grace means when she compares 'yesterday' and 'today' for Diego.",
+              "promptDari": "به زبان خودتان توضیح دهید چرا خبر امروز صبح دیه‌گو هیجان‌انگیز بود و منظور گریس وقتی «دیروز» و «امروز» دیه‌گو را مقایسه می‌کند چیست."
+            }
+          ]
+        }
       },
       {
         "id": 24,
@@ -7724,7 +8813,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "The class looks back on their very first month in America — when Yusuf could barely say hello — as you practice *could* for general past ability and *couldn't* for the negative.",
-        "summaryDari": "صنف به اولین ماه‌شان در امریکا نگاه می‌کند — زمانی که یوسف به‌سختی می‌توانست سلام بگوید — و شما *could* را برای توانایی عمومی در گذشته و *couldn't* را برای حالت منفی تمرین می‌کنید."
+        "summaryDari": "صنف به اولین ماه‌شان در امریکا نگاه می‌کند — زمانی که یوسف به‌سختی می‌توانست سلام بگوید — و شما *could* را برای توانایی عمومی در گذشته و *couldn't* را برای حالت منفی تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that correctly uses 'could' or 'couldn't' to talk about the past.",
+              "qDari": "کدام جمله 'could' یا 'couldn't' را برای صحبت درباره گذشته به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Yusuf couldn't understand his boss at first.",
+                "Yusuf couldn't understands his boss at first.",
+                "Yusuf couldn't understanding his boss at first.",
+                "Yusuf couldn't to understand his boss at first."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What could Diego do before arriving in New York, because of his schooling in Colombia?",
+              "qDari": "دیه‌گو پیش از رسیدن به نیویورک، به‌خاطر مکتبش در کلمبیا، چه کاری می‌توانست بکند؟",
+              "options": [
+                "Speak some English from school",
+                "Speak fluent English easily",
+                "Understand fast New York speech",
+                "Not speak any English at all"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "According to Yusuf, what will Zahra realize in six months?",
+              "qDari": "به گفته یوسف، زهرا تا شش ماه دیگر به چه چیزی پی خواهد برد؟",
+              "options": [
+                "She will still know nothing",
+                "How much she couldn't do today",
+                "That English is impossible to learn",
+                "That she should give up"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, compare what Yusuf and Diego could and couldn't do when they first arrived in America.",
+              "promptDari": "به زبان خودتان توضیح دهید یوسف و دیه‌گو وقتی اول به امریکا رسیدند چه کارهایی می‌توانستند و چه کارهایی نمی‌توانستند انجام دهند، و آن‌ها را با هم مقایسه کنید."
+            },
+            {
+              "promptEn": "Zahra feels discouraged about her English. In your own words, explain what happened to her that day, and how Yusuf tries to encourage her.",
+              "promptDari": "زهرا درباره انگلیسی‌اش احساس دلسردی می‌کند. به زبان خودتان توضیح دهید آن روز چه اتفاقی برایش افتاد و یوسف چطور سعی می‌کند او را دلگرم کند."
+            }
+          ]
+        }
       },
       {
         "id": 25,
@@ -8021,7 +9157,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace treats the class to a free outdoor concert in Astoria Park — the first real American show for Zahra — while you learn entertainment vocabulary like *ticket*, *audience*, and *performance*.",
-        "summaryDari": "گریس صنف را به یک کنسرت رایگان در فضای باز در پارک آستوریا می‌برد — اولین نمایش واقعی امریکایی برای زهرا — و شما واژگان سرگرمی مانند *ticket*، *audience* و *performance* را یاد می‌گیرید."
+        "summaryDari": "گریس صنف را به یک کنسرت رایگان در فضای باز در پارک آستوریا می‌برد — اولین نمایش واقعی امریکایی برای زهرا — و شما واژگان سرگرمی مانند *ticket*، *audience* و *performance* را یاد می‌گیرید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that correctly uses 'go to the'.",
+              "qDari": "کدام جمله 'go to the' را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "We go to the concert on Friday.",
+                "We go to concert on Friday.",
+                "We going to the concert on Friday.",
+                "We go the concert on Friday."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Who joined the group later, after visiting a museum?",
+              "qDari": "چه کسانی بعد از دیدن یک موزیم بعداً به گروه پیوستند؟",
+              "options": [
+                "Amina and Lina",
+                "Yusuf and Zahra",
+                "Diego and Mei",
+                "Grace alone"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What was the audience like at the downtown concert, compared to the outdoor concert in the park?",
+              "qDari": "تماشاچیان در کنسرت مرکز شهر در مقایسه با کنسرت بیرونی پارک چطور بودند؟",
+              "options": [
+                "Packed and livelier",
+                "Empty and quiet",
+                "Small but loud",
+                "The same size"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the outdoor concert in Astoria Park. Who goes, and how do Zahra and Mei each feel about the performance?",
+              "promptDari": "به زبان خودتان کنسرت بیرونی در پارک آستوریا را توصیف کنید. چه کسانی می‌روند و زهرا و می هرکدام درباره اجرا چه احساسی دارند؟"
+            },
+            {
+              "promptEn": "In your own words, describe what Diego does for Mei, and explain what Mei realizes about her own life by the end of the passage.",
+              "promptDari": "به زبان خودتان توضیح دهید دیه‌گو برای می چه کاری می‌کند و بگویید می در پایان متن درباره زندگی خودش به چه چیزی پی می‌برد."
+            }
+          ]
+        }
       }
     ]
   },
@@ -8314,7 +9497,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Zahra heads to her first job interview at a local grocery store, nervous but hopeful — practice irregular past verbs that don't follow the -ed rule, like go → went, see → saw, and have → had.",
-        "summaryDari": "زهرا به اولین مصاحبه کاری‌اش در یک دکان بقالی محلی می‌رود، عصبی اما امیدوار — افعال گذشته بی‌قاعده که از قاعده -ed پیروی نمی‌کنند را تمرین کنید، مانند go → went، see → saw و have → had."
+        "summaryDari": "زهرا به اولین مصاحبه کاری‌اش در یک دکان بقالی محلی می‌رود، عصبی اما امیدوار — افعال گذشته بی‌قاعده که از قاعده -ed پیروی نمی‌کنند را تمرین کنید، مانند go → went، see → saw و have → had.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses the past tense of 'see'?",
+              "qDari": "کدام جمله زمان گذشته فعل 'see' را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Zahra sees Yusuf waiting outside.",
+                "Zahra seen Yusuf waiting outside.",
+                "Zahra saw Yusuf waiting outside.",
+                "Zahra seeing Yusuf waiting outside."
+              ],
+              "correct": 2
+            },
+            {
+              "q": "What did the manager ask Zahra to do during her interview?",
+              "qDari": "مدیر در جریان مصاحبه از زهرا خواست چه کار کند؟",
+              "options": [
+                "Cook a meal",
+                "Take a test about prices and English phrases",
+                "Meet other employees",
+                "Fill out a resume"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What has Mei's mother done before, according to the passage?",
+              "qDari": "طبق متن، مادر می قبلاً چه کاری کرده است؟",
+              "options": [
+                "Started over in new places",
+                "Worked in a bakery",
+                "Taught English",
+                "Traveled to New York alone"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe Zahra's job interview experience — how did she prepare for it, and how did she feel afterward?",
+              "promptDari": "به زبان خودتان تجربه مصاحبه کاری زهرا را توصیف کنید — او چطور برای آن آماده شد و بعد از آن چه احساسی داشت؟"
+            },
+            {
+              "promptEn": "In your own words, describe how Mei's mother settled into her new life in the city. What helped her feel at home so quickly?",
+              "promptDari": "به زبان خودتان توضیح دهید مادر می چطور در زندگی جدیدش در شهر جا افتاد. چه چیزی کمک کرد او این‌قدر سریع احساس آشنایی کند؟"
+            }
+          ]
+        }
       },
       {
         "id": 27,
@@ -8623,7 +9853,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Mei's mother teaches Diego her almond cookie recipe as a thank-you — learn kitchen and tool vocabulary like *whisk* and *rolling pin*, and how to give simple instructions using imperatives like *Pour*, *Mix*, *Roll*.",
-        "summaryDari": "مادر می به دیه‌گو دستور پخت کلچه بادامی‌اش را به‌عنوان تشکر یاد می‌دهد — واژگان آشپزخانه و ابزار مانند *whisk* و *rolling pin* را بیاموزید، و چگونگی دادن دستورهای ساده با افعال امری مانند *Pour*، *Mix*، *Roll*."
+        "summaryDari": "مادر می به دیه‌گو دستور پخت کلچه بادامی‌اش را به‌عنوان تشکر یاد می‌دهد — واژگان آشپزخانه و ابزار مانند *whisk* و *rolling pin* را بیاموزید، و چگونگی دادن دستورهای ساده با افعال امری مانند *Pour*، *Mix*، *Roll*.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses 'with' to describe how something is done?",
+              "qDari": "کدام جمله از 'with' برای توضیح چگونگی انجام کاری به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Mix the flour with a whisk.",
+                "Mix the flour whisk.",
+                "Mix with the flour a whisk.",
+                "Whisk mix the flour."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What does Diego do while the cookies are baking, according to the passage?",
+              "qDari": "طبق متن، دیه‌گو درحالی‌که بیسکویت‌ها می‌پزند چه کار می‌کند؟",
+              "options": [
+                "He washes the dishes",
+                "He writes the recipe down carefully",
+                "He leaves the kitchen",
+                "He calls Mei"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "According to Yusuf, what did he do a hundred times before he stopped being nervous about heights?",
+              "qDari": "به گفته یوسف، پیش از اینکه دیگر از ارتفاع نترسد، چه کاری را صد بار انجام داد؟",
+              "options": [
+                "Changed a tire",
+                "Fixed a wrench",
+                "Climbed the ladder",
+                "Opened the toolbox"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe what Mei's mother teaches Diego to make, and what she says about being patient with tools and people.",
+              "promptDari": "به زبان خودتان توضیح دهید مادر می به دیه‌گو چه چیزی را یاد می‌دهد بسازد و او درباره صبورانه‌بودن با ابزارها و مردم چه می‌گوید."
+            },
+            {
+              "promptEn": "In your own words, describe Yusuf's toolbox and what he tells Zahra about learning to be good at his job.",
+              "promptDari": "به زبان خودتان جعبه ابزار یوسف را توصیف کنید و بگویید او درباره یادگرفتن مهارت در کارش به زهرا چه می‌گوید."
+            }
+          ]
+        }
       },
       {
         "id": 28,
@@ -8908,7 +10185,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Diego tells Zahra the full story of how he and Mei became friends — the perfect chance to practice sequencing words like *first*, *then*, *suddenly*, and *finally* to put a story in order.",
-        "summaryDari": "دیه‌گو داستان کامل دوستی‌اش با می را برای زهرا تعریف می‌کند — فرصتی عالی برای تمرین کلمات ترتیبی مانند *first*، *then*، *suddenly* و *finally* برای مرتب کردن یک داستان."
+        "summaryDari": "دیه‌گو داستان کامل دوستی‌اش با می را برای زهرا تعریف می‌کند — فرصتی عالی برای تمرین کلمات ترتیبی مانند *first*، *then*، *suddenly* و *finally* برای مرتب کردن یک داستان.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sequencing word describes something that happens without warning?",
+              "qDari": "کدام کلمه ترتیبی چیزی را توصیف می‌کند که بدون هشدار اتفاق می‌افتد؟",
+              "options": [
+                "then",
+                "finally",
+                "suddenly",
+                "meanwhile"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "In Diego's story, what made him realize he was visiting the bakery for Mei, not just for coffee?",
+              "qDari": "در داستان دیه‌گو، چه چیزی باعث شد او متوجه شود که به نانوایی برای می می‌رود، نه فقط برای قهوه؟",
+              "options": [
+                "She gave him a free muffin every day",
+                "She started saving him the last blueberry muffin",
+                "He suddenly realized he was going there for her, not just the coffee",
+                "His sister told him to ask her out"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "In Amina's story, what happens right after the two hours of the exam pass?",
+              "qDari": "در داستان امینه، بلافاصله بعد از گذشتن دو ساعت امتحان چه اتفاقی می‌افتد؟",
+              "options": [
+                "She calls her husband immediately",
+                "She goes straight home",
+                "An email arrives saying she passed",
+                "She faints from exhaustion"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Retell Diego's story of how he and Mei became friends, in your own words, using the order of events he describes.",
+              "promptDari": "داستان دیه‌گو درباره اینکه او و می چطور دوست شدند را به زبان خودتان و با همان ترتیب رویدادها بازگو کنید."
+            },
+            {
+              "promptEn": "Retell Amina's story of her exam day in your own words, including how she calmed her nerves and who she called first.",
+              "promptDari": "داستان روز امتحان امینه را به زبان خودتان بازگو کنید، از جمله اینکه او چطور اعصابش را آرام کرد و اول به چه کسی زنگ زد."
+            }
+          ]
+        }
       },
       {
         "id": 29,
@@ -9223,7 +10547,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace goes around the room asking about everyone's weekend — practice yes/no questions with \"Did\" + subject + base verb, and detailed questions like \"What did you do?\"",
-        "summaryDari": "گریس در صنف می‌گردد و درباره آخر هفته همه می‌پرسد — سوالات بلی/نخیر را با «Did» + فاعل + فعل ساده، و سوالات جزئی‌تر مانند «What did you do?» تمرین کنید."
+        "summaryDari": "گریس در صنف می‌گردد و درباره آخر هفته همه می‌پرسد — سوالات بلی/نخیر را با «Did» + فاعل + فعل ساده، و سوالات جزئی‌تر مانند «What did you do?» تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which question is correctly formed to ask about the past?",
+              "qDari": "کدام سوال برای پرسیدن درباره گذشته به‌درستی ساخته شده است؟",
+              "options": [
+                "Did you enjoyed it?",
+                "Did you enjoy it?",
+                "Do you enjoyed it?",
+                "Did you enjoying it?"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Where did Diego get the idea for his budget, according to his answer to Grace?",
+              "qDari": "طبق پاسخ دیه‌گو به گریس، او ایده بودجه‌اش را از کجا گرفت؟",
+              "options": [
+                "He asked Grace for help",
+                "He read a business book",
+                "He asked Mei for advice",
+                "He guessed the numbers"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "What does Zahra say made her decide to finally come to America?",
+              "qDari": "زهرا می‌گوید چه چیزی باعث شد بالاخره تصمیم بگیرد به امریکا بیاید؟",
+              "options": [
+                "She wanted a better-paying job",
+                "Her mother forced her to go",
+                "She wanted to see if Yusuf's letters were true",
+                "She won a visa lottery"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the questions Grace asks her students on Monday and how Zahra and Diego answer.",
+              "promptDari": "به زبان خودتان توضیح دهید گریس دوشنبه از شاگردانش چه سوالاتی می‌پرسد و زهرا و دیه‌گو چطور پاسخ می‌دهند."
+            },
+            {
+              "promptEn": "In your own words, describe the conversation between Zahra and Yusuf about his first year in America and what she tells him about his letters.",
+              "promptDari": "به زبان خودتان گفتگوی زهرا و یوسف درباره سال اول او در امریکا را توصیف کنید و بگویید زهرا درباره نامه‌های او چه می‌گوید."
+            }
+          ]
+        }
       },
       {
         "id": 30,
@@ -9514,7 +10885,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "With her certification in hand, Amina begins applying for real teaching jobs — learn job-application phrases like \"apply for a position,\" \"fill out an application,\" and \"update your resume.\"",
-        "summaryDari": "امینه با گرفتن سرتیفیکیت خود، شروع به درخواست دادن برای شغل‌های واقعی تدریس می‌کند — عبارات درخواست کار مانند «apply for a position»، «fill out an application» و «update your resume» را یاد بگیرید."
+        "summaryDari": "امینه با گرفتن سرتیفیکیت خود، شروع به درخواست دادن برای شغل‌های واقعی تدریس می‌کند — عبارات درخواست کار مانند «apply for a position»، «fill out an application» و «update your resume» را یاد بگیرید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word describes a person who agrees to speak positively about your work history to an employer?",
+              "qDari": "کدام کلمه شخصی را توصیف می‌کند که موافقت می‌کند درباره سابقه کاری شما با کارفرما به‌طور مثبت صحبت کند؟",
+              "options": [
+                "application",
+                "reference",
+                "resume",
+                "interview"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What two things does Amina list on her updated resume?",
+              "qDari": "امینه در سی‌وی به‌روزشده‌اش چه دو چیزی را فهرست می‌کند؟",
+              "options": [
+                "Her hobbies and her age",
+                "Her twelve years of experience in Syria and her new qualification",
+                "Her family and her address",
+                "Her college degree and her references"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Who does Zahra list as references on her job application?",
+              "qDari": "زهرا در فورم درخواست کارش چه کسانی را به‌عنوان رفرنس فهرست می‌کند؟",
+              "options": [
+                "Grace and Diego",
+                "Her mother and Mei",
+                "Yusuf and her grocery store manager",
+                "Amina and Grace"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the steps Amina takes to apply for a teaching position and how her interview goes.",
+              "promptDari": "به زبان خودتان مراحلی که امینه برای درخواست موقف تدریس طی می‌کند و اینکه مصاحبه‌اش چطور پیش می‌رود را توصیف کنید."
+            },
+            {
+              "promptEn": "In your own words, describe why Zahra almost doesn't apply for the office job, and what changes her mind.",
+              "promptDari": "به زبان خودتان توضیح دهید چرا زهرا تقریباً برای کار دفتر درخواست نمی‌دهد و چه چیزی نظرش را عوض می‌کند."
+            }
+          ]
+        }
       }
     ]
   },
@@ -9819,7 +11237,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "A new student named Tomas joins the class, and everyone peppers him with questions — practice putting question words (*who*, *what*, *where*, *when*, *why*, *how*) at the start of a question.",
-        "summaryDari": "یک محصل جدید به‌نام توماس به صنف می‌پیوندد و همه از او سوال می‌پرسند — تمرین کنید کلمات پرسشی (*who*، *what*، *where*، *when*، *why*، *how*) را در آغاز جمله سوالی بگذارید."
+        "summaryDari": "یک محصل جدید به‌نام توماس به صنف می‌پیوندد و همه از او سوال می‌پرسند — تمرین کنید کلمات پرسشی (*who*، *what*، *where*، *when*، *why*، *how*) را در آغاز جمله سوالی بگذارید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that puts the question word in the correct place.",
+              "qDari": "کدام جمله کلمه پرسشی را در جای درست قرار می‌دهد؟",
+              "options": [
+                "You are from where?",
+                "Where are you from?",
+                "Are you from where?",
+                "From where are you?"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which question word would you use to ask about a reason?",
+              "qDari": "برای پرسیدن درباره یک دلیل، از کدام کلمه پرسشی استفاده می‌کنید؟",
+              "options": [
+                "Where",
+                "Why",
+                "Which",
+                "Whose"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "At the end of their conversation, what does Grace tell Tomas to do so he can learn fastest?",
+              "qDari": "گریس در پایان صحبتشان به توماس می‌گوید برای یادگیری سریع‌تر چه کار کند؟",
+              "options": [
+                "Ask others in the room about their own stories",
+                "Study alone every night",
+                "Stop asking questions",
+                "Transfer to a different school"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the question game Grace starts on Tomas's first night in class. What questions do Diego, Zahra, and Yusuf ask him, and how does he respond?",
+              "promptDari": "به زبان خودتان بازی سوالی را که گریس در شب اول صنف توماس شروع می‌کند توضیح دهید. دیه‌گو، زهرا و یوسف چه سوالاتی از او می‌پرسند و او چطور جواب می‌دهد؟"
+            },
+            {
+              "promptEn": "In your own words, describe Tomas's conversation with Grace after class. What are his plans for school, and what advice does Grace give him at the end?",
+              "promptDari": "به زبان خودتان گفتگوی توماس با گریس بعد از صنف را توضیح دهید. برنامه‌های او برای مکتب چیست و گریس در پایان چه مشوره‌ای به او می‌دهد؟"
+            }
+          ]
+        }
       },
       {
         "id": 32,
@@ -10104,7 +11569,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace throws a year-end potluck where everyone brings *something* to share — practice *someone/something* in positive sentences, *anyone/anything* in questions and negatives, and *everyone/everything* or *no one/nothing* for totals.",
-        "summaryDari": "گریس یک مهمانی پات‌لاک پایان سال برگزار می‌کند که همه *something* برای شریک کردن می‌آورند — *someone/something* را در جملات مثبت، *anyone/anything* را در سوالات و منفی، و *everyone/everything* یا *no one/nothing* را برای کل تمرین کنید."
+        "summaryDari": "گریس یک مهمانی پات‌لاک پایان سال برگزار می‌کند که همه *something* برای شریک کردن می‌آورند — *someone/something* را در جملات مثبت، *anyone/anything* را در سوالات و منفی، و *everyone/everything* یا *no one/nothing* را برای کل تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence uses an indefinite pronoun correctly?",
+              "qDari": "کدام جمله یک ضمیر نامعین را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Anyone brought dumplings.",
+                "Someone brought dumplings.",
+                "No one brought dumplings and something.",
+                "Everyone bring dumplings."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which word means 'not even one person'?",
+              "qDari": "کدام کلمه به معنای «حتی یک نفر هم نه» است؟",
+              "options": [
+                "Everyone",
+                "Someone",
+                "No one",
+                "Anything"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "According to her talk with Grace, what was Zahra afraid to do before?",
+              "qDari": "به گفته زهرا در گفتگویش با گریس، او قبلاً از چه کاری می‌ترسید؟",
+              "options": [
+                "Cooking for others",
+                "Talking to anyone in English",
+                "Walking home alone",
+                "Losing her job"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the potluck Grace organizes. What does everyone bring, and what happens to the food by the end of the night?",
+              "promptDari": "به زبان خودتان مهمانی‌ای را که گریس ترتیب می‌دهد توضیح دهید. همه چه چیزی می‌آورند و تا پایان شب با غذا چه اتفاقی می‌افتد؟"
+            },
+            {
+              "promptEn": "In your own words, describe Zahra's conversation with Grace while they clean up. How has Zahra changed since she first arrived in the country?",
+              "promptDari": "به زبان خودتان گفتگوی زهرا با گریس هنگام جمع‌کردن را توضیح دهید. زهرا از زمانی که تازه به این کشور رسید چطور تغییر کرده است؟"
+            }
+          ]
+        }
       },
       {
         "id": 33,
@@ -10389,7 +11901,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Diego stops by the bakery to catch Mei up on his restaurant plans — pick up natural conversation fillers like *actually*, *honestly*, *by the way*, and *I mean* that make everyday English sound less stiff.",
-        "summaryDari": "دیه‌گو به نانوایی سر می‌زند تا می را از پلان‌های رستورانش باخبر کند — کلمات طبیعی گفتگو مانند *actually*، *honestly*، *by the way* و *I mean* را یاد بگیرید که انگلیسی روزمره را کمتر رسمی می‌کنند."
+        "summaryDari": "دیه‌گو به نانوایی سر می‌زند تا می را از پلان‌های رستورانش باخبر کند — کلمات طبیعی گفتگو مانند *actually*، *honestly*، *by the way* و *I mean* را یاد بگیرید که انگلیسی روزمره را کمتر رسمی می‌کنند.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase introduces a related topic, like changing the subject smoothly?",
+              "qDari": "کدام عبارت یک موضوع مرتبط را معرفی می‌کند، مانند تغییر نرم موضوع صحبت؟",
+              "options": [
+                "Speaking of",
+                "Honestly",
+                "So",
+                "Anyway"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which phrase does Diego use to clarify that he still needs more money?",
+              "qDari": "دیه‌گو از کدام عبارت استفاده می‌کند تا روشن کند هنوز به پول بیشتری نیاز دارد؟",
+              "options": [
+                "By the way",
+                "I mean",
+                "Honestly",
+                "So"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "One year after being terrified of the exam, what has Amina become, according to Grace?",
+              "qDari": "به گفته گریس، امینه یک سال بعد از ترسیدن از امتحان، به چه چیزی تبدیل شده است؟",
+              "options": [
+                "She quit teaching",
+                "A real teacher again",
+                "A student again",
+                "She moved away"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe Diego and Mei's conversation at the bakery. What good news does each of them share?",
+              "promptDari": "به زبان خودتان گفتگوی دیه‌گو و می در نانوایی را توضیح دهید. هرکدام چه خبر خوشی را به اشتراک می‌گذارد؟"
+            },
+            {
+              "promptEn": "In your own words, describe Grace's phone call with Amina. Why does Grace thank her, and what does Amina say about trust at the end?",
+              "promptDari": "به زبان خودتان تماس تلفنی گریس با امینه را توضیح دهید. گریس برای چه چیزی از او تشکر می‌کند و امینه در پایان درباره اعتماد چه می‌گوید؟"
+            }
+          ]
+        }
       },
       {
         "id": 34,
@@ -10674,7 +12233,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Diego wants to treat the whole group to dinner and texts everyone to find a night that works — learn social-plan phrases like *hang out*, *meet up*, *get together*, and *catch up*.",
-        "summaryDari": "دیه‌گو می‌خواهد همه گروه را به شام دعوت کند و به همه پیام می‌دهد تا یک شب مناسب پیدا کند — عبارات برنامه‌ریزی اجتماعی مانند *hang out*، *meet up*، *get together* و *catch up* را یاد بگیرید."
+        "summaryDari": "دیه‌گو می‌خواهد همه گروه را به شام دعوت کند و به همه پیام می‌دهد تا یک شب مناسب پیدا کند — عبارات برنامه‌ریزی اجتماعی مانند *hang out*، *meet up*، *get together* و *catch up* را یاد بگیرید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase means to pay for someone else as a gift?",
+              "qDari": "کدام عبارت به معنای پرداخت هزینه برای شخص دیگر به‌عنوان هدیه است؟",
+              "options": [
+                "Catch up",
+                "Treat",
+                "Meet up",
+                "Get together"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What does Diego make at a small restaurant to hold a table for the group?",
+              "qDari": "دیه‌گو برای نگه‌داشتن یک میز برای گروه، در یک رستورانت کوچک چه کاری می‌کند؟",
+              "options": [
+                "An invitation",
+                "A plan",
+                "A reservation",
+                "A meeting"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "In his toast at the end of dinner, what does Diego hope the group will never do?",
+              "qDari": "دیه‌گو در پیشکش خود در پایان نان شام، امیدوار است گروه هرگز چه کاری نکند؟",
+              "options": [
+                "Stop eating together",
+                "Lose touch with each other",
+                "Leave New York",
+                "Stop studying English"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe how Diego organizes the Friday dinner. Why does he want to treat the group, and why does Amina almost not come?",
+              "promptDari": "به زبان خودتان توضیح دهید دیه‌گو چطور نان شام جمعه را ترتیب می‌دهد. چرا او می‌خواهد گروه را مهمان کند و چرا امینه تقریباً نمی‌آید؟"
+            },
+            {
+              "promptEn": "In your own words, describe what each person shares while catching up at dinner. What does Grace say about how far the group has come?",
+              "promptDari": "به زبان خودتان توضیح دهید هرکس هنگام به‌روزشدن سر نان شام چه چیزی را به اشتراک می‌گذارد. گریس درباره پیشرفت گروه چه می‌گوید؟"
+            }
+          ]
+        }
       },
       {
         "id": 35,
@@ -10971,7 +12577,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "The class talks about their plans for the new year — Amina's new classroom, Diego's meetings — while you practice the present continuous (am/is/are + -ing) for arrangements already confirmed for the future.",
-        "summaryDari": "صنف درباره پلان‌های‌شان برای سال نو صحبت می‌کند — صنف جدید امینه، ملاقات‌های دیه‌گو — و شما زمان حال استمراری (am/is/are + -ing) را برای برنامه‌های از قبل تایید‌شده برای آینده تمرین می‌کنید."
+        "summaryDari": "صنف درباره پلان‌های‌شان برای سال نو صحبت می‌کند — صنف جدید امینه، ملاقات‌های دیه‌گو — و شما زمان حال استمراری (am/is/are + -ing) را برای برنامه‌های از قبل تایید‌شده برای آینده تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Choose the sentence that correctly uses the present continuous for a future arrangement.",
+              "qDari": "کدام جمله برای یک قرار از پیش تعیین‌شده در آینده، حال استمراری را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "I meet my new students' parents next Thursday.",
+                "I'm meeting my new students' parents next Thursday.",
+                "I am meet my new students' parents next Thursday.",
+                "I meeting my new students' parents next Thursday."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Which word means a planned meeting with someone, often for an official reason?",
+              "qDari": "کدام کلمه به معنای یک ملاقات از پیش برنامه‌ریزی‌شده با کسی، اغلب برای یک دلیل رسمی است؟",
+              "options": [
+                "Appointment",
+                "Plan to",
+                "Set up",
+                "Booked"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "According to Zahra, what date is her meeting with the immigration counselor confirmed for?",
+              "qDari": "به گفته زهرا، ملاقاتش با مشاور مهاجرت برای کدام تاریخ تایید شده است؟",
+              "options": [
+                "The first",
+                "The fifteenth",
+                "The thirtieth",
+                "The fifth"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe each person's plans for the new year in Grace's class. What is each person arranging?",
+              "promptDari": "به زبان خودتان برنامه‌های هر فرد برای سال نو در صنف گریس را توضیح دهید. هرکس چه چیزی را ترتیب می‌دهد؟"
+            },
+            {
+              "promptEn": "In your own words, describe Zahra and Yusuf's conversation about their future. What is Zahra planning, and what does she hope to do once things are more settled?",
+              "promptDari": "به زبان خودتان گفتگوی زهرا و یوسف درباره آینده‌شان را توضیح دهید. زهرا چه چیزی را برنامه‌ریزی می‌کند و امیدوار است وقتی همه‌چیز بیشتر جا افتاد چه کاری انجام دهد؟"
+            }
+          ]
+        }
       }
     ]
   },
@@ -11264,7 +12917,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "On New Year's Eve, the group shares their intentions for the year ahead — Diego wants to save toward a restaurant stand — while you practice 'be going to' + the base verb for decided plans.",
-        "summaryDari": "در شب سال نو، گروه نیت‌های‌شان برای سال پیش‌رو را شریک می‌کنند — دیه‌گو می‌خواهد برای یک دکان رستوران پس‌انداز کند — و شما 'be going to' + فعل ساده را برای پلان‌های تصمیم‌گرفته‌شده تمرین می‌کنید."
+        "summaryDari": "در شب سال نو، گروه نیت‌های‌شان برای سال پیش‌رو را شریک می‌کنند — دیه‌گو می‌خواهد برای یک دکان رستوران پس‌انداز کند — و شما 'be going to' + فعل ساده را برای پلان‌های تصمیم‌گرفته‌شده تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word from this unit means a strong desire to achieve or succeed at something, like opening a restaurant?",
+              "qDari": "کدام کلمه در این درس به معنای یک آرزوی قوی برای موفق‌شدن در چیزی است، مانند بازکردن یک رستورانت؟",
+              "options": [
+                "ambition",
+                "decide",
+                "plan",
+                "future"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly uses 'going to' to describe Zahra's decided plan from the New Year's Eve conversation?",
+              "qDari": "کدام جمله از «going to» به‌درستی برای توصیف برنامه‌ی قطعی زهرا در گفتگوی شب سال نو استفاده می‌کند؟",
+              "options": [
+                "Zahra is going to finish her office skills class.",
+                "Zahra go to finish her office skills class.",
+                "Zahra is going finish her office skills class.",
+                "Zahra finishing to office skills class."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "On the fire escape, what do Zahra and Yusuf each promise to help the other with?",
+              "qDari": "روی پله‌های آتش، زهرا و یوسف هرکدام قول می‌دهند در چه کاری به دیگری کمک کنند؟",
+              "options": [
+                "Zahra helps with the paperwork; Yusuf helps with English homework",
+                "Zahra helps fix cars; Yusuf helps with cooking",
+                "Zahra helps find a new apartment; Yusuf helps get a visa",
+                "Neither offers to help the other"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe at least two of the intentions people share on New Year's Eve. Why does each plan matter to that person?",
+              "promptDari": "به زبان خودتان دست‌کم دو تا از قصدهایی را که افراد در شب سال نو به اشتراک می‌گذارند توضیح دهید. چرا هر برنامه برای آن فرد اهمیت دارد؟"
+            },
+            {
+              "promptEn": "Describe the conversation between Zahra and Yusuf on the fire escape in your own words. What does it show about how far they've come and what they plan for the future?",
+              "promptDari": "گفتگوی زهرا و یوسف روی پله‌های آتش را به زبان خودتان توصیف کنید. این گفتگو درباره‌ی مسیری که تا اینجا طی کرده‌اند و برنامه‌هایشان برای آینده چه چیزی نشان می‌دهد؟"
+            }
+          ]
+        }
       },
       {
         "id": 37,
@@ -11561,7 +13261,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "On the morning of the business fair, Diego sees a long line outside and makes a confident guess about how the day will go — practice using 'going to' for predictions based on evidence you can see right now.",
-        "summaryDari": "صبح روز نمایشگاه تجارت، دیه‌گو صف طولانی بیرون می‌بیند و حدس مطمئنی درباره روزش می‌زند — 'going to' را برای پیش‌بینی‌های مبتنی بر شواهدی که همین حالا می‌بینید تمرین کنید."
+        "summaryDari": "صبح روز نمایشگاه تجارت، دیه‌گو صف طولانی بیرون می‌بیند و حدس مطمئنی درباره روزش می‌زند — 'going to' را برای پیش‌بینی‌های مبتنی بر شواهدی که همین حالا می‌بینید تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase means 'going to do something in just a moment'?",
+              "qDari": "کدام عبارت به معنای «انجام‌دادن کاری در همین چند لحظه‌ی آینده» است؟",
+              "options": [
+                "about to",
+                "obvious",
+                "certain",
+                "evidence"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly makes a prediction based on evidence you can see right now, the way Mei does at the fair?",
+              "qDari": "کدام جمله، مانند کاری که می در نمایشگاه انجام می‌دهد، بر اساس شواهدی که همین حالا می‌بینید پیش‌بینی می‌کند؟",
+              "options": [
+                "Look at this crowd — it's obvious you're going to do well.",
+                "Look at this crowd — it obvious you go well.",
+                "Look at this crowd — it's obvious you will did well.",
+                "Look at this crowd — obvious going you well."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What does the older investor say convinced him that Diego's plan is going to work?",
+              "qDari": "سرمایه‌گذار مسن‌تر می‌گوید چه چیزی او را متقاعد کرد که نقشه‌ی دیه‌گو موفق خواهد شد؟",
+              "options": [
+                "Diego's numbers and research",
+                "Diego's confident appearance",
+                "The size of the crowd",
+                "Grace's recommendation"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Describe the morning of the business fair in your own words. What evidence makes Diego and Mei believe things are going to go well?",
+              "promptDari": "صبح نمایشگاه تجارتی را به زبان خودتان توصیف کنید. چه شواهدی دیه‌گو و می را متقاعد می‌کند که همه‌چیز خوب پیش خواهد رفت؟"
+            },
+            {
+              "promptEn": "In your own words, explain what happens after Diego's pitch and how Grace responds when he tells her the news that night.",
+              "promptDari": "به زبان خودتان توضیح دهید بعد از سخنرانی دیه‌گو چه اتفاقی می‌افتد و گریس وقتی آن شب این خبر را می‌شنود چگونه واکنش نشان می‌دهد."
+            }
+          ]
+        }
       },
       {
         "id": 38,
@@ -11846,7 +13593,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Lina points out every pigeon and squirrel on a walk through Astoria Park — the perfect setting to learn animal vocabulary and when to use 'a/an' for one animal versus no article for animals as a category.",
-        "summaryDari": "لینا در قدم‌زدن در پارک آستوریا هر کبوتر و سنجاب را نشان می‌دهد — زمینه‌ای عالی برای یادگیری واژگان حیوانات و اینکه کی از 'a/an' برای یک حیوان و کی بدون حرف تعریف برای حیوانات به‌عنوان یک گروه استفاده کنید."
+        "summaryDari": "لینا در قدم‌زدن در پارک آستوریا هر کبوتر و سنجاب را نشان می‌دهد — زمینه‌ای عالی برای یادگیری واژگان حیوانات و اینکه کی از 'a/an' برای یک حیوان و کی بدون حرف تعریف برای حیوانات به‌عنوان یک گروه استفاده کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word describes an animal, like a dog or a cat, that people keep and take care of at home?",
+              "qDari": "کدام کلمه حیوانی مانند سگ یا پشک را توصیف می‌کند که مردم آن را در خانه نگه‌داری و مراقبت می‌کنند؟",
+              "options": [
+                "pet",
+                "rat",
+                "raccoon",
+                "seagull"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly uses 'a' before one animal in general, the way Lina talks about wanting one?",
+              "qDari": "کدام جمله «a» را پیش از یک حیوان به‌طور کلی به‌درستی استفاده می‌کند، همان‌طور که لینا درباره‌ی خواستنش صحبت می‌کند؟",
+              "options": [
+                "Lina wants a dog.",
+                "Lina wants dog.",
+                "Lina wants an dog.",
+                "Lina want a dogs."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which animal does Biscuit calmly watch from the bakery window during a rainstorm?",
+              "qDari": "بیسکویت در طول یک باران، کدام حیوان را آرام از کلکین نانوایی تماشا می‌کند؟",
+              "options": [
+                "A raccoon",
+                "A seagull",
+                "A squirrel",
+                "A pigeon"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Describe the walk through Astoria Park in your own words. What animals does Lina see, and how does Amina respond to her request for a pet?",
+              "promptDari": "پیاده‌روی در پارک آستوریا را به زبان خودتان توصیف کنید. لینا چه حیواناتی را می‌بیند و امینه چگونه به خواسته‌ی او برای داشتن یک حیوان خانگی پاسخ می‌دهد؟"
+            },
+            {
+              "promptEn": "In your own words, describe Biscuit the bakery cat and her relationship with Mei and the customers. What does Diego joke about her becoming?",
+              "promptDari": "به زبان خودتان بیسکویت، پشک نانوایی، و رابطه‌اش با می و مشتریان را توصیف کنید. دیه‌گو به‌شوخی می‌گوید او چه چیزی خواهد شد؟"
+            }
+          ]
+        }
       },
       {
         "id": 39,
@@ -12131,7 +13925,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "As the year winds down, the class makes fun predictions about each other's futures — practice 'will' (or 'won't') for predictions and opinions about the future, especially without solid evidence.",
-        "summaryDari": "با نزدیک شدن به پایان سال، صنف پیش‌بینی‌های سرگرم‌کننده‌ای درباره آینده همدیگر می‌زند — 'will' (یا 'won't') را برای پیش‌بینی‌ها و نظرات درباره آینده، به‌ویژه بدون شواهد قطعی، تمرین کنید."
+        "summaryDari": "با نزدیک شدن به پایان سال، صنف پیش‌بینی‌های سرگرم‌کننده‌ای درباره آینده همدیگر می‌زند — 'will' (یا 'won't') را برای پیش‌بینی‌ها و نظرات درباره آینده، به‌ویژه بدون شواهد قطعی، تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase means you think something is probably NOT going to happen?",
+              "qDari": "کدام عبارت به این معناست که فکر می‌کنید احتمالاً چیزی اتفاق نخواهد افتاد؟",
+              "options": [
+                "I doubt",
+                "I bet",
+                "I'm confident",
+                "I'm sure"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly uses 'will' to share an opinion about the future, without pointing to visible evidence?",
+              "qDari": "کدام جمله از «will» برای بیان نظری درباره‌ی آینده، بدون اشاره به شواهد قابل‌مشاهده، به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Yusuf will always love fixing cars.",
+                "Yusuf going love fixing cars.",
+                "Yusuf wills love fixing cars.",
+                "Yusuf will loving fixing cars."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What is Grace confident will happen to Mei's bakery, according to her private predictions?",
+              "qDari": "طبق پیش‌بینی‌های خصوصی گریس، او مطمئن است چه اتفاقی برای نانوایی می خواهد افتاد؟",
+              "options": [
+                "It will thrive for years, especially with her mother's help",
+                "It will close within a year",
+                "It will move to a new neighborhood",
+                "It will be sold to Diego"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe two of the predictions the classmates make about each other's futures. Do you think they are realistic?",
+              "promptDari": "به زبان خودتان دو تا از پیش‌بینی‌هایی را که همصنفی‌ها درباره‌ی آینده‌ی یکدیگر می‌کنند توضیح دهید. آیا فکر می‌کنید واقع‌بینانه هستند؟"
+            },
+            {
+              "promptEn": "Describe Grace's private predictions about her students as she walks home. What does she realize about herself at the end of the passage?",
+              "promptDari": "پیش‌بینی‌های خصوصی گریس درباره‌ی محصلانش را وقتی به خانه پیاده می‌رود، توصیف کنید. او در پایان متن درباره‌ی خودش به چه چیزی پی می‌برد؟"
+            }
+          ]
+        }
       },
       {
         "id": 40,
@@ -12416,7 +14257,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "At a new restaurant, the waiter arrives and everyone has to decide fast — practice 'will' (contracted as \"I'll\") for decisions made right at the moment of speaking, not planned ahead of time.",
-        "summaryDari": "در یک رستوران جدید، پیشخدمت می‌رسد و همه باید سریع تصمیم بگیرند — 'will' (به‌صورت مخفف «I'll») را برای تصمیماتی که همان لحظه گرفته می‌شوند، نه از قبل پلان‌شده، تمرین کنید."
+        "summaryDari": "در یک رستوران جدید، پیشخدمت می‌رسد و همه باید سریع تصمیم بگیرند — 'will' (به‌صورت مخفف «I'll») را برای تصمیماتی که همان لحظه گرفته می‌شوند، نه از قبل پلان‌شده، تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase describes deciding something immediately, without planning ahead of time?",
+              "qDari": "کدام عبارت تصمیم‌گرفتن فوری و بدون برنامه‌ریزی قبلی را توصیف می‌کند؟",
+              "options": [
+                "on the spot",
+                "in advance",
+                "years ago",
+                "next season"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Which sentence correctly uses 'I'll' to make a decision at the moment of speaking, like the friends do at the restaurant?",
+              "qDari": "کدام جمله مانند کاری که دوستان در رستورانت انجام می‌دهند، از «I'll» برای تصمیم‌گیری در همان لحظه‌ی صحبت‌کردن به‌درستی استفاده می‌کند؟",
+              "options": [
+                "I'll have the noodle soup.",
+                "I having noodle soup.",
+                "I am will have noodle soup.",
+                "I have going noodle soup."
+              ],
+              "correct": 0
+            },
+            {
+              "q": "What surprises Diego about his own decision to take the vendor spot at the winter market?",
+              "qDari": "درباره‌ی تصمیم خودش برای گرفتن جای فروشندگی در بازار زمستانی، چه چیزی دیه‌گو را غافلگیر می‌کند؟",
+              "options": [
+                "He decides instantly, without thinking twice, and it surprises even him",
+                "He takes a long time to decide",
+                "He asks Grace for permission first",
+                "He turns down the offer"
+              ],
+              "correct": 0
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "Describe how each person orders at the restaurant in your own words. Who decides on the spot, and who takes a moment longer?",
+              "promptDari": "چگونگی سفارش‌دادن هر فرد در رستورانت را به زبان خودتان توصیف کنید. چه کسی بی‌درنگ تصمیم می‌گیرد و چه کسی کمی بیشتر مکث می‌کند؟"
+            },
+            {
+              "promptEn": "In your own words, describe Diego's phone call about the vendor spot. What does he decide, and what does Mei offer to do to help him?",
+              "promptDari": "به زبان خودتان تماس تلفنی دیه‌گو درباره‌ی جای فروشندگی را توضیح دهید. او چه تصمیمی می‌گیرد و می چه کمکی پیشنهاد می‌کند؟"
+            }
+          ]
+        }
       }
     ]
   },
@@ -12721,7 +14609,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "The class talks about possibilities for the coming year — Amina might apply to a training program — while you practice 'may' or 'might' + the base verb for future possibilities you're not certain about.",
-        "summaryDari": "صنف درباره احتمالات سال پیش‌رو صحبت می‌کند — امینه ممکن است برای یک برنامه آموزشی درخواست بدهد — و شما 'may' یا 'might' + فعل ساده را برای احتمالات آینده‌ای که مطمئن نیستید تمرین می‌کنید."
+        "summaryDari": "صنف درباره احتمالات سال پیش‌رو صحبت می‌کند — امینه ممکن است برای یک برنامه آموزشی درخواست بدهد — و شما 'may' یا 'might' + فعل ساده را برای احتمالات آینده‌ای که مطمئن نیستید تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses 'might' to talk about a future possibility you are not sure about?",
+              "qDari": "کدام جمله از «might» به‌درستی برای صحبت درباره یک امکان آینده که از آن مطمئن نیستید استفاده می‌کند؟",
+              "options": [
+                "I might applying to a new program.",
+                "I might apply to a new program.",
+                "I might applies to a new program.",
+                "I am might apply to a new program."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "In the passage, when Zahra says she is 'uncertain' about her promotion, what does 'uncertain' mean?",
+              "qDari": "در متن، وقتی زهرا می‌گوید درباره ترفیع خود «uncertain» است، این کلمه به چه معناست؟",
+              "options": [
+                "Completely sure",
+                "Not sure",
+                "Excited",
+                "Worried about money"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Why might Yusuf and Zahra have less time together, according to their evening conversation?",
+              "qDari": "بربنیاد گفتگوی شامگاهی آن‌ها، چرا ممکن است یوسف و زهرا وقت کمتری باهم داشته باشند؟",
+              "options": [
+                "Yusuf is moving to another city",
+                "Yusuf might take extra weekend shifts at another garage",
+                "Zahra is starting night school",
+                "They are arguing about money"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the different possibilities that Amina, Yusuf, Zahra, Diego, and Mei talk about for the coming year, and what each person says their plans depend on.",
+              "promptDari": "به زبان خودتان، امکانات مختلفی که امینه، یوسف، زهرا، دیه‌گو و می برای سال آینده درباره‌شان صحبت می‌کنند را توضیح دهید و بگویید برنامه‌های هرکدام به چه چیزی بستگی دارد."
+            },
+            {
+              "promptEn": "In your own words, describe Yusuf and Zahra's evening conversation about the possibility of a second job. What benefits and drawbacks do they discuss, and how does Zahra respond?",
+              "promptDari": "به زبان خودتان، گفتگوی شامگاهی یوسف و زهرا درباره امکان شغل دوم را توضیح دهید. آن‌ها درباره چه فایده‌ها و ضررهایی صحبت می‌کنند و زهرا چگونه پاسخ می‌دهد؟"
+            }
+          ]
+        }
       },
       {
         "id": 42,
@@ -13006,7 +14941,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Nervous about an upcoming interview, Amina asks the class for advice — practice 'should'/'shouldn't' + the base verb for advice, and the stronger \"If I were you, I would...\" for personal suggestions.",
-        "summaryDari": "امینه که برای مصاحبه پیش‌رو عصبی است، از صنف مشوره می‌خواهد — 'should'/'shouldn't' + فعل ساده را برای مشوره، و عبارت قوی‌تر «If I were you, I would...» را برای پیشنهادات شخصی تمرین کنید."
+        "summaryDari": "امینه که برای مصاحبه پیش‌رو عصبی است، از صنف مشوره می‌خواهد — 'should'/'shouldn't' + فعل ساده را برای مشوره، و عبارت قوی‌تر «If I were you, I would...» را برای پیشنهادات شخصی تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence gives advice correctly using 'should'?",
+              "qDari": "کدام جمله با استفاده درست از «should» نصیحت می‌کند؟",
+              "options": [
+                "You should to arrive early.",
+                "You should arrive early.",
+                "You should arriving early.",
+                "You are should arrive early."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "When Zahra says, 'If I were you, I would arrive fifteen minutes early,' what is she doing?",
+              "qDari": "وقتی زهرا می‌گوید: «اگر جای تو بودم، پانزده دقیقه زودتر می‌رسیدم»، او چه کار می‌کند؟",
+              "options": [
+                "Giving a command",
+                "Giving strong, personal advice",
+                "Asking a question",
+                "Making an excuse"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What does Grace say helps everyone learn, including teachers?",
+              "qDari": "گریس می‌گوید چه چیزی به یادگیری همه، ازجمله معلمان، کمک می‌کند؟",
+              "options": [
+                "Studying alone",
+                "Avoiding new tasks",
+                "Making mistakes",
+                "Working overtime"
+              ],
+              "correct": 2
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, list the different pieces of advice Amina's classmates give her before her interview, and explain which piece of advice you think is most useful and why.",
+              "promptDari": "به زبان خودتان، نصیحت‌های مختلفی که هم‌صنفی‌های امینه پیش از مصاحبه‌اش به او می‌دهند را فهرست کنید و توضیح دهید کدام نصیحت را مفیدترین می‌دانید و چرا."
+            },
+            {
+              "promptEn": "In your own words, describe what happens when Amina calls Grace after the interview. What advice does Grace give her for the first week of the new job, and why does Amina find it familiar?",
+              "promptDari": "به زبان خودتان توضیح دهید وقتی امینه بعد از مصاحبه به گریس زنگ می‌زند چه اتفاقی می‌افتد. گریس برای هفته اول کار جدید چه نصیحتی می‌کند و چرا این نصیحت برای امینه آشنا به‌نظر می‌رسد؟"
+            }
+          ]
+        }
       },
       {
         "id": 43,
@@ -13291,7 +15273,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "With good news to celebrate, Grace suggests a small get-together — practice making suggestions to a group with \"Let's,\" \"How about...?\", \"Why don't we...?\", and \"What if...?\"",
-        "summaryDari": "با خبرهای خوشی برای جشن گرفتن، گریس یک دورهمی کوچک پیشنهاد می‌کند — پیشنهاد دادن به یک گروه را با «Let's»، «How about...?»، «Why don't we...?» و «What if...?» تمرین کنید."
+        "summaryDari": "با خبرهای خوشی برای جشن گرفتن، گریس یک دورهمی کوچک پیشنهاد می‌کند — پیشنهاد دادن به یک گروه را با «Let's»، «How about...?»، «Why don't we...?» و «What if...?» تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly makes a suggestion using 'How about'?",
+              "qDari": "کدام جمله با استفاده درست از «How about» یک پیشنهاد می‌دهد؟",
+              "options": [
+                "How about we going to the bakery?",
+                "How about going to the bakery?",
+                "How about we goes to the bakery?",
+                "How about to go to the bakery?"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "When Yusuf says, 'What if we invited Tomas and a few others too?' what is he doing?",
+              "qDari": "وقتی یوسف می‌گوید: «چه می‌شود اگر تومس و چند نفر دیگر را هم دعوت کنیم؟»، او چه کار می‌کند؟",
+              "options": [
+                "Making a complaint",
+                "Giving an order",
+                "Making a suggestion",
+                "Refusing an invitation"
+              ],
+              "correct": 2
+            },
+            {
+              "q": "At the Saturday celebration, what does Mei propose at the end?",
+              "qDari": "در جشن روز شنبه، می در پایان چه پیشنهادی می‌کند؟",
+              "options": [
+                "Celebrating only once a year",
+                "Celebrating everywhere, as many times as they can",
+                "Canceling future celebrations",
+                "Moving the celebration to Diego's stand only"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe the suggestions each person makes about the celebration — where to hold it, who to invite, and which day to choose. Try to use phrases like 'let's,' 'why don't we,' and 'what if.'",
+              "promptDari": "به زبان خودتان، پیشنهادهایی که هرکس درباره جشن می‌دهد — اینکه کجا برگزار شود، چه کسانی دعوت شوند و چه روزی انتخاب شود — را توضیح دهید. سعی کنید از عبارت‌هایی مانند «let's»، «why don't we» و «what if» استفاده کنید."
+            },
+            {
+              "promptEn": "In your own words, describe what happens at the Saturday celebration at the bakery, and the suggestions people make about celebrating again in the future.",
+              "promptDari": "به زبان خودتان، اتفاقاتی که در جشن روز شنبه در نانوایی می‌افتد و پیشنهادهایی که مردم برای جشن‌گرفتن دوباره در آینده می‌دهند را توضیح دهید."
+            }
+          ]
+        }
       },
       {
         "id": 44,
@@ -13588,7 +15617,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Zahra and Yusuf move into their own apartment and divide up the housework fairly — learn chore vocabulary like *wash the dishes* and *do the laundry*, and how these verbs pair with objects or gerunds.",
-        "summaryDari": "زهرا و یوسف به آپارتمان خودشان نقل مکان می‌کنند و کارهای خانه را منصفانه تقسیم می‌کنند — واژگان کارهای خانه مانند *wash the dishes* و *do the laundry* را یاد بگیرید، و چگونگی همراهی این افعال با اسم یا gerund."
+        "summaryDari": "زهرا و یوسف به آپارتمان خودشان نقل مکان می‌کنند و کارهای خانه را منصفانه تقسیم می‌کنند — واژگان کارهای خانه مانند *wash the dishes* و *do the laundry* را یاد بگیرید، و چگونگی همراهی این افعال با اسم یا gerund.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses a chore verb with a gerund after a preposition?",
+              "qDari": "کدام جمله یک فعل کار خانه را با شکل gerund بعد از حرف اضافه به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Yusuf is good at vacuum.",
+                "Yusuf is good at vacuuming.",
+                "Yusuf is good at to vacuum.",
+                "Yusuf is good vacuuming."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "In the passage, what chore does Yusuf agree to do on weeknights, in exchange for Zahra sweeping the floor on weekends?",
+              "qDari": "در متن، یوسف موافقت می‌کند شب‌های هفته کدام کار خانه را انجام دهد، در عوض اینکه زهرا آخر هفته‌ها کف را جارو کند؟",
+              "options": [
+                "Doing the laundry",
+                "Washing the dishes",
+                "Taking out the trash",
+                "Vacuuming"
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What has changed about Yusuf's chore habits since the chore chart was made, according to Zahra?",
+              "qDari": "به گفته زهرا، از وقتی جدول کارهای خانه ساخته شده، عادت‌های یوسف در کارهای خانه چگونه تغییر کرده است؟",
+              "options": [
+                "He never helps at all",
+                "He has gotten much better, like taking out the trash without being asked",
+                "He only helps when guests visit",
+                "He refuses to do chores now"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe how Zahra and Yusuf divide the household chores in their new apartment. Which chores does each person agree to do, and on which days?",
+              "promptDari": "به زبان خودتان توضیح دهید زهرا و یوسف چگونه کارهای خانه را در آپارتمان جدیدشان تقسیم می‌کنند. هرکدام موافقت می‌کنند کدام کارها را و در چه روزهایی انجام دهند؟"
+            },
+            {
+              "promptEn": "In your own words, describe what happens when Amina visits Zahra and Yusuf's apartment a month later. What does Lina help with, and how has Yusuf changed since the chore chart was made?",
+              "promptDari": "به زبان خودتان توضیح دهید یک ماه بعد وقتی امینه از آپارتمان زهرا و یوسف دیدن می‌کند چه اتفاقی می‌افتد. لینا در چه کاری کمک می‌کند و یوسف از وقتی جدول کارهای خانه ساخته شده چگونه تغییر کرده است؟"
+            }
+          ]
+        }
       },
       {
         "id": 45,
@@ -13879,7 +15955,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Amina helps Zahra arrange her new apartment room by room — practice prepositions of place (*in*, *on*, *under*, *next to*, *above*) to say exactly where furniture and things belong.",
-        "summaryDari": "امینه به زهرا کمک می‌کند آپارتمان جدیدش را اتاق به اتاق ترتیب دهد — حروف اضافه مکان (*in*، *on*، *under*، *next to*، *above*) را تمرین کنید تا دقیقاً بگویید مبلمان و اشیا کجا قرار دارند."
+        "summaryDari": "امینه به زهرا کمک می‌کند آپارتمان جدیدش را اتاق به اتاق ترتیب دهد — حروف اضافه مکان (*in*، *on*، *under*، *next to*، *above*) را تمرین کنید تا دقیقاً بگویید مبلمان و اشیا کجا قرار دارند.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which sentence correctly uses a preposition of place?",
+              "qDari": "کدام جمله یک حرف اضافه مکان را به‌درستی استفاده می‌کند؟",
+              "options": [
+                "The lamp is next the sofa.",
+                "The lamp is next to the sofa.",
+                "The lamp is on next to the sofa.",
+                "The lamp is next of the sofa."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "Where do Amina and Zahra put the shelf while organizing the kitchen?",
+              "qDari": "امینه و زهرا هنگام مرتب‌کردن آشپزخانه، قفسه را کجا می‌گذارند؟",
+              "options": [
+                "Above the stove",
+                "Under the sink",
+                "Inside the closet",
+                "Next to the door"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "According to Yusuf, where is the kitchen located in the new apartment?",
+              "qDari": "به گفته یوسف، آشپزخانه در آپارتمان جدید کجا واقع شده است؟",
+              "options": [
+                "Upstairs from the bedroom",
+                "Next to the bathroom",
+                "Across the street",
+                "Underneath the living room"
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe how Amina and Zahra arrange the apartment. Where do they decide to put the lamp, the shelf above the stove, and Zahra's clothes?",
+              "promptDari": "به زبان خودتان توضیح دهید امینه و زهرا آپارتمان را چگونه می‌چینند. آن‌ها تصمیم می‌گیرند چراغ، قفسه بالای اجاق و لباس‌های زهرا را کجا بگذارند؟"
+            },
+            {
+              "promptEn": "In your own words, describe Diego's visit to Zahra and Yusuf's apartment. What does he notice on the windowsill, and what does Yusuf explain about Zahra's idea?",
+              "promptDari": "به زبان خودتان توضیح دهید دیدن دیه‌گو از آپارتمان زهرا و یوسف چگونه است. او روی طاقچه پنجره متوجه چه چیزی می‌شود و یوسف درباره ایده زهرا چه توضیح می‌دهد؟"
+            }
+          ]
+        }
       }
     ]
   },
@@ -14184,7 +16307,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Near the end of the year, everyone shares an important life event — Yusuf's arrival three years ago and more — while you practice the simple past for events at a definite point in your life.",
-        "summaryDari": "نزدیک پایان سال، همه یک رویداد مهم زندگی‌شان را بازگو می‌کنند — رسیدن یوسف سه سال پیش و بیشتر — و شما زمان گذشته ساده را برای رویدادهایی در یک نقطه مشخص از زندگی‌تان تمرین می‌کنید."
+        "summaryDari": "نزدیک پایان سال، همه یک رویداد مهم زندگی‌شان را بازگو می‌کنند — رسیدن یوسف سه سال پیش و بیشتر — و شما زمان گذشته ساده را برای رویدادهایی در یک نقطه مشخص از زندگی‌تان تمرین می‌کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word means an important event or turning point in someone's life?",
+              "qDari": "کدام کلمه به معنای یک رویداد مهم یا نقطه چرخش در زندگی کسی است؟",
+              "options": [
+                "milestone",
+                "arrive",
+                "achieve",
+                "move"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Choose the sentence that correctly uses the simple past to talk about a specific event.",
+              "qDari": "کدام جمله از گذشته ساده برای صحبت درباره یک رویداد مشخص به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Diego achieve his first investment this year.",
+                "Diego achieved his first investment this year.",
+                "Diego achieves his first investment this year.",
+                "Diego is achieving his first investment this year."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What do both this year's class (in the first passage) and Grace herself (in the second passage) have in common?",
+              "qDari": "صنف امسال (در متن اول) و خود گریس (در متن دوم) چه چیز مشترکی دارند؟",
+              "options": [
+                "They all moved to New York in the same year.",
+                "They have each experienced meaningful turning points in their lives.",
+                "They all became nurses.",
+                "They all met each other ten years ago."
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, choose two classmates from the passage and describe the important event each of them shared with the class. What made these events milestones in their lives?",
+              "promptDari": "به زبان خودتان، دو هم‌صنفی از متن را انتخاب کنید و رویداد مهمی را که هرکدام با صنف شریک کردند توصیف کنید. این رویدادها چرا برای زندگی‌شان نقطه عطف بودند؟"
+            },
+            {
+              "promptEn": "In your own words, describe how Grace felt about her first years of teaching and about this year's class. What does the passage suggest teaching means to her?",
+              "promptDari": "به زبان خودتان توضیح دهید گریس درباره سال‌های اول تدریسش و صنف امسال چه احساسی داشت. این متن نشان می‌دهد تدریس برای او چه معنایی دارد؟"
+            }
+          ]
+        }
       },
       {
         "id": 47,
@@ -14481,7 +16651,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Looking back at the whole year — Amina's job search in January, her certificate in spring — practice the simple past with time markers like \"in January,\" \"last spring,\" and \"in the fall.\"",
-        "summaryDari": "نگاهی به کل سال — جستجوی کار امینه در جنوری، سرتیفیکیتش در بهار — زمان گذشته ساده را با نشانه‌های زمانی مانند «in January»، «last spring» و «in the fall» تمرین کنید."
+        "summaryDari": "نگاهی به کل سال — جستجوی کار امینه در جنوری، سرتیفیکیتش در بهار — زمان گذشته ساده را با نشانه‌های زمانی مانند «in January»، «last spring» و «in the fall» تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase means 'during the entire year'?",
+              "qDari": "کدام عبارت به معنای «در طول تمام سال» است؟",
+              "options": [
+                "throughout the year",
+                "by winter",
+                "in the fall",
+                "look back on"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Choose the sentence that correctly uses a time marker with the simple past.",
+              "qDari": "کدام جمله از یک نشانه زمانی همراه با گذشته ساده به‌درستی استفاده می‌کند؟",
+              "options": [
+                "In the spring, Amina start her teaching certificate program.",
+                "In the spring, Amina started her teaching certificate program.",
+                "In the spring, Amina starting her teaching certificate program.",
+                "In the spring, Amina will start her teaching certificate program."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "According to both passages, how does the class change from January to winter?",
+              "qDari": "براساس هر دو متن، صنف از جنوری تا زمستان چطور تغییر می‌کند؟",
+              "options": [
+                "They stay exactly the same all year.",
+                "They go from being strangers to becoming close friends.",
+                "They stop attending class in the fall.",
+                "They only talk about grammar, never their lives."
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe what happened to Diego and Zahra over the summer, and what happened to Mei and to Yusuf and Zahra in the fall.",
+              "promptDari": "به زبان خودتان توضیح دهید در طول تابستان برای دیه‌گو و زهرا چه اتفاقی افتاد و در پاییز برای می و برای یوسف و زهرا چه اتفاقی افتاد."
+            },
+            {
+              "promptEn": "In your own words, explain why Grace keeps a notebook for each year's class, and describe how she says the students changed from January to winter.",
+              "promptDari": "به زبان خودتان توضیح دهید چرا گریس برای صنف هر سال یک دفترچه نگه می‌دارد و توصیف کنید او می‌گوید محصلان از جنوری تا زمستان چطور تغییر کردند."
+            }
+          ]
+        }
       },
       {
         "id": 48,
@@ -14772,7 +16989,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "Grace books a year-end celebration dinner at a restaurant — practice ordering politely with \"Could I have...?\", \"I'd like...\", and finishing the meal with \"Can we get the check?\"",
-        "summaryDari": "گریس یک شام جشن پایان سال در یک رستوران رزرو می‌کند — سفارش دادن مودبانه را با «Could I have...?»، «I'd like...» و پایان دادن به غذا با «Can we get the check?» تمرین کنید."
+        "summaryDari": "گریس یک شام جشن پایان سال در یک رستوران رزرو می‌کند — سفارش دادن مودبانه را با «Could I have...?»، «I'd like...» و پایان دادن به غذا با «Can we get the check?» تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which phrase would you use to politely ask for food at a restaurant?",
+              "qDari": "کدام عبارت را برای درخواست مؤدبانه غذا در رستورانت استفاده می‌کنید؟",
+              "options": [
+                "Could I have...",
+                "Split the bill",
+                "Tip",
+                "Reservation"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Choose the sentence that politely asks for the bill at the end of a meal.",
+              "qDari": "کدام جمله مؤدبانه در پایان غذا صورت‌حساب را درخواست می‌کند؟",
+              "options": [
+                "Give me the check now.",
+                "Could we get the check, please?",
+                "The check is here.",
+                "We want check."
+              ],
+              "correct": 1
+            },
+            {
+              "q": "What do the two passages show about how the group behaves at the restaurant, from ordering to the end of the meal?",
+              "qDari": "این دو متن نشان می‌دهند گروه از سفارش‌دادن تا پایان غذا چطور رفتار می‌کند؟",
+              "options": [
+                "They argue about the food and leave without paying.",
+                "They order politely, decide to split the bill, and end the night with a toast and a complimentary dessert.",
+                "They only drink wine and never eat.",
+                "They leave before the food arrives."
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, describe how each person in the passage orders their food politely, and explain how the group decides to pay the bill.",
+              "promptDari": "به زبان خودتان توضیح دهید هر فرد در متن چطور مؤدبانه غذایش را سفارش می‌دهد و گروه چطور تصمیم می‌گیرد صورت‌حساب را پرداخت کنند."
+            },
+            {
+              "promptEn": "In your own words, describe the toast Grace makes and what Diego jokes about. Why do you think Mei says the restaurant is 'one to remember'?",
+              "promptDari": "به زبان خودتان نوشیدنی به‌سلامتی گریس و شوخی دیه‌گو را توصیف کنید. به‌نظر شما چرا می می‌گوید این رستورانت «یکی برای به‌یادداشتن» است؟"
+            }
+          ]
+        }
       },
       {
         "id": 49,
@@ -15057,7 +17321,54 @@ const LEVELS = [
           ]
         },
         "summaryEn": "On the very last day of class, everyone reflects on what they achieved this year and what they still hope for — practice the simple past for achievements already reached and \"hope to\"/\"going to\" for ambitions still ahead.",
-        "summaryDari": "در آخرین روز صنف، همه به آنچه امسال به‌دست آورده‌اند و آنچه هنوز امیدوارند فکر می‌کنند — زمان گذشته ساده را برای دستاوردهای رسیده‌شده و «hope to»/«going to» را برای آرزوهای پیش‌رو تمرین کنید."
+        "summaryDari": "در آخرین روز صنف، همه به آنچه امسال به‌دست آورده‌اند و آنچه هنوز امیدوارند فکر می‌کنند — زمان گذشته ساده را برای دستاوردهای رسیده‌شده و «hope to»/«going to» را برای آرزوهای پیش‌رو تمرین کنید.",
+        "exam": {
+          "mcqs": [
+            {
+              "q": "Which word describes something you hope to do in the future?",
+              "qDari": "کدام کلمه چیزی را توصیف می‌کند که امیدوارید در آینده انجام دهید؟",
+              "options": [
+                "ambition",
+                "accomplish",
+                "proud of",
+                "come a long way"
+              ],
+              "correct": 0
+            },
+            {
+              "q": "Choose the sentence that correctly uses 'hope to' to describe an ambition still ahead.",
+              "qDari": "کدام جمله از «hope to» برای توصیف یک بلندپروازی که هنوز پیش رو است به‌درستی استفاده می‌کند؟",
+              "options": [
+                "Zahra hoped to finish her degree already.",
+                "Zahra hope to finish her degree.",
+                "Zahra hopes to finish her degree.",
+                "Zahra is hope to finish her degree."
+              ],
+              "correct": 2
+            },
+            {
+              "q": "According to both passages, how have the students changed from when they first met to their last day of class?",
+              "qDari": "براساس هر دو متن، محصلان از زمانی که برای اولین‌بار همدیگر را دیدند تا آخرین روز صنف چطور تغییر کرده‌اند؟",
+              "options": [
+                "They have not changed at all.",
+                "They have achieved real goals and grown close as friends, with new ambitions ahead.",
+                "They stopped studying English.",
+                "They forgot about each other."
+              ],
+              "correct": 1
+            }
+          ],
+          "qual": [
+            {
+              "promptEn": "In your own words, choose two classmates from the passage and describe what each of them achieved this year and what ambition they still hope to reach.",
+              "promptDari": "به زبان خودتان، دو هم‌صنفی از متن را انتخاب کنید و توضیح دهید هرکدام امسال چه چیزی به‌دست آوردند و هنوز به چه بلندپروازی امیدوارند."
+            },
+            {
+              "promptEn": "In your own words, describe the goodbye scene between Grace and her students. What does Amina thank Grace for, and how does Grace respond?",
+              "promptDari": "به زبان خودتان صحنه خداحافظی گریس و محصلانش را توصیف کنید. امینه از گریس بابت چه چیزی تشکر می‌کند و گریس چطور پاسخ می‌دهد؟"
+            }
+          ]
+        }
       }
     ]
   },
@@ -27913,7 +30224,7 @@ const ACTIVITY_ORDER = ["flashcards","match","mcq","fillBlank","sentenceBuild","
 // Writing Prompt asks for output only after input + explicit understanding are both
 // in place; and the Second Reading Passage closes the unit on an easier, receptive
 // note rather than ending right after the more effortful writing task.
-const BONUS_ACTIVITIES = ["comprehension","dialogue","grammar","writing","comprehension2"]; // optional — never gate the reward
+const BONUS_ACTIVITIES = ["comprehension","dialogue","grammar","writing","comprehension2","exam"]; // optional — never gate the reward
 const STORAGE_KEY = "crossroads-state-v1";
 const UNIT_REWARD = 2; // dollars credited per completed unit
 
@@ -27999,9 +30310,9 @@ function showToast(msg){
 function defaultState(){
   const unitProgress = {};
   LEVELS.forEach(lv=> lv.units.forEach(u=>{
-    unitProgress[u.id] = { flashcards:false, match:false, mcq:false, fillBlank:false, sentenceBuild:false, dictation:false, comprehension:false, writing:false, comprehension2:false, grammar:false, dialogue:false };
+    unitProgress[u.id] = { flashcards:false, match:false, mcq:false, fillBlank:false, sentenceBuild:false, dictation:false, comprehension:false, writing:false, comprehension2:false, grammar:false, dialogue:false, exam:false };
   }));
-  return { unitProgress, unitsAwarded: [], wallet: { balance: 0, awards: [], cashouts: [] }, writingResponses: {}, migratedToUnitRewards: true, partsAwarded: [], unitScores: {} };
+  return { unitProgress, unitsAwarded: [], wallet: { balance: 0, awards: [], cashouts: [] }, writingResponses: {}, examResponses: {}, migratedToUnitRewards: true, partsAwarded: [], unitScores: {} };
 }
 
 // Storage layer: prefer Claude.ai's native window.storage (syncs to the account),
@@ -28050,16 +30361,18 @@ async function loadState(){
   // merge in any newly-added units, or newly-added optional-activity flags, so old saves stay compatible
   LEVELS.forEach(lv=> lv.units.forEach(u=>{
     if(!state.unitProgress[u.id]){
-      state.unitProgress[u.id] = { flashcards:false, match:false, mcq:false, fillBlank:false, sentenceBuild:false, dictation:false, comprehension:false, writing:false, comprehension2:false, grammar:false, dialogue:false };
+      state.unitProgress[u.id] = { flashcards:false, match:false, mcq:false, fillBlank:false, sentenceBuild:false, dictation:false, comprehension:false, writing:false, comprehension2:false, grammar:false, dialogue:false, exam:false };
     }
     if(state.unitProgress[u.id].comprehension === undefined) state.unitProgress[u.id].comprehension = false;
     if(state.unitProgress[u.id].writing === undefined) state.unitProgress[u.id].writing = false;
     if(state.unitProgress[u.id].comprehension2 === undefined) state.unitProgress[u.id].comprehension2 = false;
     if(state.unitProgress[u.id].grammar === undefined) state.unitProgress[u.id].grammar = false;
+    if(state.unitProgress[u.id].exam === undefined) state.unitProgress[u.id].exam = false;
   }));
   if(!state.wallet) state.wallet = { balance:0, awards:[], cashouts:[] };
   if(!state.unitsAwarded) state.unitsAwarded = [];
   if(!state.writingResponses) state.writingResponses = {};
+  if(!state.examResponses) state.examResponses = {};
   if(!state.partsAwarded) state.partsAwarded = [];
   if(!state.unitScores) state.unitScores = {};
   // state.levelsAwarded (old field) is left as-is if present — migrateToUnitRewards() reads it once, then it's no longer needed.
@@ -28510,7 +30823,7 @@ function renderUnitHub(main, unitId){
       <div class="bonus-heading"><span class="bonus-badge">★</span> ${L.bonusLabel}</div>
       <div class="bonus-note">${L.bonusNote}</div>
       <div class="activity-grid">
-        ${BONUS_ACTIVITIES.filter(a=> a!=='dialogue' || unit.dialogue).map(a=>{
+        ${BONUS_ACTIVITIES.filter(a=> (a!=='dialogue' || unit.dialogue) && (a!=='exam' || unit.exam)).map(a=>{
           const done = p[a];
           return `<button class="activity-tile bonus-tile ${done?'done':''}" onclick="navTo({name:'activity', unitId:${unit.id}, activity:'${a}'})">
             <div class="activity-name">${L.activities[a]}</div>
@@ -28546,6 +30859,7 @@ function renderActivity(main, unitId, activity){
   if(activity === "comprehension2") return renderComprehension2(main, unit);
   if(activity === "grammar") return renderGrammarBonus(main, unit);
   if(activity === "dialogue") return renderDialogue(main, unit);
+  if(activity === "exam") return renderExam(main, unit);
 }
 
 function activityHeader(unit, activityKey){
@@ -29496,6 +31810,108 @@ function renderComprehension2(main, unit){
       btn.disabled = true;
       showToast(L.markedAttempted);
     });
+  }
+  draw();
+}
+
+/* ---------------- Exam (optional, non-gating) ----------------
+   Combines the MCQ-check pattern from renderComprehension (3 graded multiple-choice
+   questions covering the whole unit — vocab, grammar, and both reading passages) with
+   the textarea-save pattern from renderWriting (2 free-response questions, one tied to
+   each reading passage). MCQ score is shown via the button text, same as the reading
+   passages; the two written answers are saved ungraded, same as the Writing Prompt.
+   Currently populated only for units 1–5 (unit.exam is undefined for later units, so
+   renderUnitHub's bonus-tile filter hides this tile until more content is added). */
+function renderExam(main, unit){
+  const L = t();
+  const ex = unit.exam;
+  let answers = new Array(ex.mcqs.length).fill(null);
+  let checked = false;
+  const existingQual = (state.examResponses && state.examResponses[unit.id]) || ["", ""];
+
+  function draw(){
+    main.innerHTML = `<div class="screen">
+      ${activityHeader(unit, "exam")}
+      <div class="passage-hint">${L.examMcqIntro}</div>
+      <div id="examQuestions">
+        ${ex.mcqs.map((q, qi)=>`
+          <div class="comp-question">
+            <div class="comp-q-text lat">${qi+1}. ${q.q}</div>
+            <div class="comp-q-dari">${q.qDari}</div>
+            <div class="comp-options" data-qi="${qi}">
+              ${q.options.map((opt, oi)=>`<button class="comp-opt lat" data-oi="${oi}">${opt}</button>`).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="nav-row">
+        <button class="btn btn-primary btn-full" id="examCheckBtn">${L.checkAnswers}</button>
+      </div>
+
+      <div class="passage-hint exam-divider">${L.examQualIntro}</div>
+
+      <div class="passage-hint">${L.examQ1Label}</div>
+      <div class="passage-block">
+        <div class="passage-en lat">${ex.qual[0].promptEn}</div>
+        <div class="passage-dari">${ex.qual[0].promptDari}</div>
+      </div>
+      <textarea class="dict-input writing-textarea" id="examQual0Input" rows="5" placeholder="${L.yourResponse}">${existingQual[0] || ""}</textarea>
+      <button class="btn btn-outline btn-full" id="examQual0SaveBtn">${L.savePrompt}</button>
+      <div id="examQual0SavedNote" class="saved-note ${existingQual[0] ? '' : 'hidden'}">${existingQual[0] ? L.previouslySaved : ''}</div>
+
+      <div class="passage-hint exam-qual-gap">${L.examQ2Label}</div>
+      <div class="passage-block">
+        <div class="passage-en lat">${ex.qual[1].promptEn}</div>
+        <div class="passage-dari">${ex.qual[1].promptDari}</div>
+      </div>
+      <textarea class="dict-input writing-textarea" id="examQual1Input" rows="5" placeholder="${L.yourResponse}">${existingQual[1] || ""}</textarea>
+      <button class="btn btn-outline btn-full" id="examQual1SaveBtn">${L.savePrompt}</button>
+      <div id="examQual1SavedNote" class="saved-note ${existingQual[1] ? '' : 'hidden'}">${existingQual[1] ? L.previouslySaved : ''}</div>
+    </div>`;
+
+    document.querySelectorAll("#examQuestions .comp-options").forEach(group=>{
+      const qi = parseInt(group.dataset.qi, 10);
+      group.querySelectorAll(".comp-opt").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          if(checked) return;
+          answers[qi] = parseInt(btn.dataset.oi, 10);
+          group.querySelectorAll(".comp-opt").forEach(b=>b.classList.remove("selected"));
+          btn.classList.add("selected");
+        });
+      });
+    });
+
+    document.getElementById("examCheckBtn").addEventListener("click", async ()=>{
+      if(checked) return;
+      checked = true;
+      let correct = 0;
+      ex.mcqs.forEach((q, qi)=>{
+        const group = document.querySelector(`#examQuestions .comp-options[data-qi="${qi}"]`);
+        group.querySelectorAll(".comp-opt").forEach((btn, oi)=>{
+          if(oi === q.correct) btn.classList.add("correct");
+          else if(oi === answers[qi]) btn.classList.add("wrong");
+        });
+        if(answers[qi] === q.correct) correct++;
+      });
+      await markBonusAttempted(unit, "exam");
+      const btn = document.getElementById("examCheckBtn");
+      btn.textContent = L.scoreSummary(correct, ex.mcqs.length);
+      btn.disabled = true;
+      showToast(L.markedAttempted);
+    });
+
+    function wireQualSave(idx){
+      document.getElementById(`examQual${idx}SaveBtn`).addEventListener("click", async ()=>{
+        const text = document.getElementById(`examQual${idx}Input`).value.trim();
+        if(!state.examResponses) state.examResponses = {};
+        if(!state.examResponses[unit.id]) state.examResponses[unit.id] = ["", ""];
+        state.examResponses[unit.id][idx] = text;
+        await markBonusAttempted(unit, "exam");
+        showToast(L.saved);
+      });
+    }
+    wireQualSave(0);
+    wireQualSave(1);
   }
   draw();
 }
