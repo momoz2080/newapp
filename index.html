@@ -155,6 +155,44 @@ body.dari-mode .level-title{ font-family: var(--dari); font-weight:700; }
 .node-label{ margin-top:8px; font-size:0.72rem; text-align:center; max-width:78px; color: var(--ink-soft); font-weight:600; line-height:1.25; }
 .node-btn{ background:none; border:none; padding:0; display:flex; flex-direction:column; align-items:center; }
 
+/* ---------- Weekly streak (missed-day alert + this-week status) ---------- */
+/* See checkWeeklyStreakBonuses() / missedDayAlertActive() / currentWeekStreakStatus()
+   below: a day counts as active when a unit's required activities were finished
+   that calendar day, and a Mon–Sun week needs 5 active days with no 2 consecutive
+   inactive days to stay eligible for that week's $4 bonus. */
+.streak-alert{
+  display:flex; align-items:flex-start; gap:10px;
+  background: var(--rose-soft); border: 1.5px solid var(--rose);
+  border-radius: 14px; padding: 12px 14px; margin-bottom: 16px;
+}
+.streak-alert-icon{ font-size:1.3rem; line-height:1; }
+.streak-alert-text{ flex:1; }
+.streak-alert-title{ font-family: var(--serif); font-weight:700; color: var(--rose); font-size:0.98rem; margin-bottom:2px; }
+body.dari-mode .streak-alert-title{ font-family: var(--dari); }
+.streak-alert-body{ font-size:0.82rem; color: var(--ink-soft); line-height:1.4; }
+.streak-alert-close{
+  background:none; border:none; font-size:1.2rem; line-height:1; color: var(--rose);
+  cursor:pointer; padding:2px 4px;
+}
+
+.streak-strip{
+  background:#fff; border:1.5px solid var(--line); border-radius:14px;
+  padding: 12px 14px; margin-bottom: 22px;
+}
+.streak-strip-title{ font-family: var(--serif); font-weight:700; color: var(--indigo); font-size:0.9rem; margin-bottom:8px; }
+body.dari-mode .streak-strip-title{ font-family: var(--dari); }
+.streak-dots{ display:flex; gap:6px; margin-bottom:8px; }
+.streak-dot{
+  flex:1; height:22px; border-radius:7px; background: var(--line);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.7rem; font-weight:700; color:#fff;
+}
+.streak-dot.done{ background: var(--sage); }
+.streak-dot.missed{ background: var(--rose); }
+.streak-dot.today{ background:#fff; border: 2px dashed var(--gold); }
+.streak-dot.future{ background: var(--line); opacity:0.5; }
+.streak-strip-caption{ font-size:0.78rem; color: var(--ink-soft); line-height:1.4; }
+
 .level-reward-note{
   margin-top: 14px; margin-bottom: 16px; font-size: 0.85rem; color: var(--ink-soft);
   background: var(--sand); border-radius: var(--radius-card); padding: 10px 14px;
@@ -622,6 +660,14 @@ const UI = {
     importHeading:"2. Paste it on your other device", importDesc:"On your other phone or browser, paste the code here and tap Import. Your existing progress on this device is kept — the code only adds anything new.",
     importPlaceholder:"Paste your progress code here", importBtn:"Import & merge",
     importSuccess:"Progress merged successfully!", importInvalid:"That code doesn't look right — please check you copied the whole thing.",
+    streakAlertTitle:"You missed a day",
+    streakAlertBody:"You didn't finish a unit yesterday. Finish one today — two missed days in a row breaks this week's streak and its $4 bonus. Your past rewards aren't affected.",
+    streakAlertDismiss:"Dismiss",
+    streakStripTitle:"This week",
+    streakCaptionBroken:"This week's $4 bonus is no longer available — two days were missed in a row. Rewards you've already earned aren't affected.",
+    streakCaptionOnTrack:"5 active days this week — fill in every writing section for this week's units to lock in the $4 bonus.",
+    streakCaptionProgress:(n)=> n+" of 5 active days this week — finish a unit today to keep the streak alive.",
+    earnedForStreak:"Perfect week bonus",
   },
   fa: {
     trail: "مسیر", wallet: "پیسک", back: "بازگشت",
@@ -670,6 +716,14 @@ const UI = {
     importHeading:"۲. آن را در دستگاه دیگرتان جاگذاری کنید", importDesc:"در موبایل یا مرورگر دیگرتان، کد را اینجا جاگذاری کنید و روی وارد کردن بزنید. پیشرفت فعلی شما در این دستگاه حفظ می‌شود — این کد فقط چیزهای تازه را اضافه می‌کند.",
     importPlaceholder:"کد پیشرفت خود را اینجا جاگذاری کنید", importBtn:"وارد کردن و ادغام",
     importSuccess:"پیشرفت با موفقیت ادغام شد!", importInvalid:"این کد درست به نظر نمی‌رسد — لطفاً بررسی کنید که کل آن را کپی کرده‌اید.",
+    streakAlertTitle:"یک روز را از دست دادید",
+    streakAlertBody:"دیروز هیچ واحدی را تکمیل نکردید. امروز یک واحد را تکمیل کنید — از دست دادن دو روز پیاپی، تداوم این هفته و جایزه ۴ دالری آن را از بین می‌برد. پاداش‌هایی که قبلاً بدست آورده‌اید تحت تأثیر قرار نمی‌گیرند.",
+    streakAlertDismiss:"رد کردن",
+    streakStripTitle:"این هفته",
+    streakCaptionBroken:"جایزه ۴ دالری این هفته دیگر در دسترس نیست — دو روز پیاپی از دست رفت. پاداش‌هایی که قبلاً بدست آورده‌اید تحت تأثیر قرار نمی‌گیرند.",
+    streakCaptionOnTrack:"۵ روز فعال در این هفته — برای دریافت جایزه ۴ دالری، تمام بخش‌های نوشتاری واحدهای این هفته را پر کنید.",
+    streakCaptionProgress:(n)=> n+" از ۵ روز فعال در این هفته — امروز یک واحد را تکمیل کنید تا تداوم ادامه یابد.",
+    earnedForStreak:"جایزه هفته عالی",
   }
 };
 
@@ -30273,6 +30327,7 @@ let lang = "en";
 let state = null;
 let currentScreen = { name: "trail" };
 let trailSemesterTab = 1; // which semester tab is showing on the Trail (landing) screen — not persisted
+let streakAlertDismissed = false; // hides the missed-day banner for the rest of this session once closed — not persisted, so it returns next time the app is opened if still unresolved
 let synthVoice = null;
 let synthVoiceFemale = null;
 let synthVoiceMale = null;
@@ -30475,7 +30530,7 @@ function mergeStates(local, imported){
     }
   }
 
-  const awardKey = a => a.unit !== undefined ? "u"+a.unit : (a.milestone !== undefined ? "m"+a.milestone : "l"+a.level);
+  const awardKey = a => a.unit !== undefined ? "u"+a.unit : (a.milestone !== undefined ? "m"+a.milestone : (a.streakWeek !== undefined ? "s"+a.streakWeek : "l"+a.level));
   const awardMap = new Map();
   [...(merged.wallet.awards||[]), ...((imported.wallet && imported.wallet.awards) || [])].forEach(a=>{
     if(!awardMap.has(awardKey(a))) awardMap.set(awardKey(a), a);
@@ -30600,6 +30655,145 @@ async function checkUnitAward(unit){
 
 function updateWalletChip(){
   document.getElementById("topWalletBal").textContent = "$" + state.wallet.balance;
+}
+
+/* ---------------- Weekly streak ----------------
+   A "day" counts as active when a unit's mandatory activities (ACTIVITY_ORDER —
+   not the optional bonus ones) were completed that calendar day. That's exactly
+   what a wallet.awards entry with a `unit` field already records (checkUnitAward
+   pushes one, dated the moment the unit finishes), so active days are derived
+   live from awards already on file instead of tracking a separate list that
+   could drift out of sync. Weeks run Monday–Sunday in the learner's local time. */
+const STREAK_BONUS = 4; // dollars for a "perfect week": >=5 active days, no 2 consecutive inactive days, and every writing section for that week's units filled in
+
+function localDateKey(d){
+  // YYYY-MM-DD in local time (not UTC) so "today"/"yesterday" match the learner's own clock
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function startOfWeek(d){
+  // Local midnight of the Monday on/before d
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dow = (date.getDay() + 6) % 7; // Mon=0 ... Sun=6
+  date.setDate(date.getDate() - dow);
+  return date;
+}
+function weekDayKeys(weekStart){
+  const out = [];
+  for(let i=0;i<7;i++){
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    out.push(localDateKey(d));
+  }
+  return out;
+}
+function activeDaySet(){
+  const days = new Set();
+  (state.wallet.awards || []).forEach(a=>{
+    if(a.unit !== undefined) days.add(localDateKey(new Date(a.date)));
+  });
+  return days;
+}
+// Units whose mandatory-completion award landed on one of the given date-keys
+function unitsCompletedOnDays(dateKeys){
+  const keySet = new Set(dateKeys);
+  const ids = new Set();
+  (state.wallet.awards || []).forEach(a=>{
+    if(a.unit !== undefined && keySet.has(localDateKey(new Date(a.date)))) ids.add(a.unit);
+  });
+  return Array.from(ids);
+}
+// A week "succeeds" when >=5 of its 7 days are active AND no two consecutive days are both inactive
+function weekMeetsStreakRule(dateKeys, active){
+  const flags = dateKeys.map(k => active.has(k));
+  if(flags.filter(Boolean).length < 5) return false;
+  for(let i=0;i<flags.length-1;i++){
+    if(!flags[i] && !flags[i+1]) return false;
+  }
+  return true;
+}
+
+// Pays the $4 bonus for every past, fully-finished calendar week that met the
+// streak rule and had every writing section (for units finished that week)
+// filled in. Only runs on weeks strictly before the current one, since a week
+// can't be judged until it's over. Checking for an existing `streakWeek` award
+// before paying keeps this idempotent — safe to call on every app load without
+// ever double-paying, and a week already paid is never revisited or clawed back
+// even if later days are missed.
+async function checkWeeklyStreakBonuses(){
+  const unitAwards = (state.wallet.awards || []).filter(a => a.unit !== undefined);
+  if(unitAwards.length === 0) return false;
+
+  const active = activeDaySet();
+  const now = new Date();
+  const currentWeekStart = startOfWeek(now);
+  const firstDate = unitAwards.map(a => new Date(a.date)).sort((a,b)=>a-b)[0];
+  const alreadyPaid = new Set(
+    (state.wallet.awards || []).filter(a => a.streakWeek !== undefined).map(a => a.streakWeek)
+  );
+
+  let changed = false;
+  let cursor = startOfWeek(firstDate);
+  while(cursor < currentWeekStart){
+    const key = localDateKey(cursor);
+    if(!alreadyPaid.has(key)){
+      const days = weekDayKeys(cursor);
+      if(weekMeetsStreakRule(days, active)){
+        const units = unitsCompletedOnDays(days);
+        const allWritten = units.length > 0 && units.every(uid => ((state.writingResponses || {})[uid] || "").trim().length > 0);
+        if(allWritten){
+          state.wallet.balance += STREAK_BONUS;
+          state.wallet.awards.push({ streakWeek: key, date: new Date().toISOString(), amount: STREAK_BONUS });
+          changed = true;
+        }
+      }
+    }
+    cursor = new Date(cursor);
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  if(changed) await saveState();
+  return changed;
+}
+
+// True when yesterday had no unit finished, today doesn't have one finished yet
+// either, and the learner's streak was already underway as of yesterday — so a
+// brand-new account isn't nagged before it's even started.
+function missedDayAlertActive(){
+  const unitAwards = (state.wallet.awards || []).filter(a => a.unit !== undefined);
+  if(unitAwards.length === 0) return false;
+  const firstKey = unitAwards.map(a => localDateKey(new Date(a.date))).sort()[0];
+  const active = activeDaySet();
+  const now = new Date();
+  const todayKey = localDateKey(now);
+  const yest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  const yestKey = localDateKey(yest);
+  if(yestKey < firstKey) return false;
+  if(active.has(todayKey)) return false;
+  return !active.has(yestKey);
+}
+
+// Mon–Sun status for the Trail header: which days this week are done / missed /
+// today / future, how many active days so far, and whether a gap has already
+// broken this week's eligibility for the $4 bonus.
+function currentWeekStreakStatus(){
+  const active = activeDaySet();
+  const now = new Date();
+  const weekStart = startOfWeek(now);
+  const todayKey = localDateKey(now);
+  const days = weekDayKeys(weekStart).map(key=>{
+    let status;
+    if(active.has(key)) status = "done";
+    else if(key === todayKey) status = "today";
+    else if(key < todayKey) status = "missed";
+    else status = "future";
+    return { key, status };
+  });
+  const doneCount = days.filter(d=>d.status==="done").length;
+  let brokenGap = false;
+  for(let i=0;i<days.length-1;i++){
+    if(days[i].status==="missed" && days[i+1].status==="missed") brokenGap = true;
+  }
+  return { days, doneCount, brokenGap };
 }
 
 /* ---------------- Milestone celebration ---------------- */
@@ -30797,7 +30991,33 @@ function renderTrail(main){
   const tab = trailSemesterTab;
   const levels = semesterLevels(tab);
 
-  let html = `<div class="semester-tabs">
+  const showAlert = !streakAlertDismissed && missedDayAlertActive();
+  const weekStatus = currentWeekStreakStatus();
+  const captionText = weekStatus.brokenGap ? L.streakCaptionBroken
+    : weekStatus.doneCount >= 5 ? L.streakCaptionOnTrack
+    : L.streakCaptionProgress(weekStatus.doneCount);
+
+  let html = "";
+  if(showAlert){
+    html += `<div class="streak-alert" id="streakAlertBanner">
+      <div class="streak-alert-icon">⚠️</div>
+      <div class="streak-alert-text">
+        <div class="streak-alert-title">${L.streakAlertTitle}</div>
+        <div class="streak-alert-body">${L.streakAlertBody}</div>
+      </div>
+      <button class="streak-alert-close" id="streakAlertCloseBtn" aria-label="${L.streakAlertDismiss}">×</button>
+    </div>`;
+  }
+
+  html += `<div class="streak-strip">
+    <div class="streak-strip-title">${L.streakStripTitle}</div>
+    <div class="streak-dots">
+      ${weekStatus.days.map(d=> `<span class="streak-dot ${d.status}">${d.status==='done' ? '✓' : (d.status==='missed' ? '✕' : '')}</span>`).join("")}
+    </div>
+    <div class="streak-strip-caption">${captionText}</div>
+  </div>`;
+
+  html += `<div class="semester-tabs">
     ${MEDALS.map((m, i)=>{
       const tabNum = i+1;
       return `<button class="semester-tab ${tab===tabNum?'active':''}" data-tab="${tabNum}">${L[SEMESTER_LABEL_KEYS[i]]}</button>`;
@@ -30839,6 +31059,17 @@ function renderTrail(main){
     </div>`;
   });
   main.innerHTML = `<div class="screen">${html}</div>`;
+
+  if(showAlert){
+    const closeBtn = document.getElementById("streakAlertCloseBtn");
+    if(closeBtn){
+      closeBtn.addEventListener("click", ()=>{
+        streakAlertDismissed = true;
+        const banner = document.getElementById("streakAlertBanner");
+        if(banner) banner.remove();
+      });
+    }
+  }
 
   document.querySelectorAll(".semester-tab").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -32150,6 +32381,9 @@ function renderWallet(main){
           const title = medal ? (lang==='en' ? medal.titleEn : medal.titleDari) : a.milestone;
           return `<div class="history-row"><span>🏅 ${L.earnedForMilestone(title)}</span><span class="history-amt plus">+$${a.amount}</span></div>`;
         }
+        if(a.streakWeek !== undefined){
+          return `<div class="history-row"><span>🔥 ${L.earnedForStreak}</span><span class="history-amt plus">+$${a.amount}</span></div>`;
+        }
         return `<div class="history-row"><span>${L.earnedForLevel(a.level)}</span><span class="history-amt plus">+$${a.amount}</span></div>`;
       }).join("") : `<div class="empty-note">${L.noEarnings}</div>`}
     </div>
@@ -32321,12 +32555,15 @@ function renderCertificate(main, part){
   await loadState();
   const migrated = await migrateToUnitRewards();
   const healed = await reconcileAwards();
+  const streakPaid = await checkWeeklyStreakBonuses();
   updateWalletChip();
   setLang("en");
   if(migrated){
     showToast(lang==="en" ? "💰 Rewards now unlock per unit — any already-finished units were credited." : "💰 پاداش‌ها اکنون به ازای هر واحد است — واحدهای قبلاً تکمیل شده اعتبار داده شدند.");
   } else if(healed){
     showToast(lang==="en" ? "💰 A missing unit reward was added to your Piggy Bank." : "💰 پاداش واحد ناقص به پیسک شما اضافه شد.");
+  } else if(streakPaid){
+    showToast(lang==="en" ? "🔥 Perfect week! 5 active days with no 2-day gap, and every writing section filled in — $4 added to your Piggy Bank!" : "🔥 هفته عالی! ۵ روز فعال بدون دو روز وقفه، و تمام بخش‌های نوشتاری پر شده — ۴ دالر به پیسک شما اضافه شد!");
   }
 })();
 </script>
