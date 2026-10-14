@@ -31694,17 +31694,49 @@ function primeSpeechSynthesis(){
   }catch(e){ /* best-effort */ }
 }
 
+// Makes every pre-generated clip louder at playback time, without touching the
+// actual MP3 files (no re-generation needed). Raise this if clips still sound
+// quiet, or lower it if they start to sound harsh/distorted — 1 is the clips'
+// original, unboosted volume. Paired with a soft limiter below so a boost this
+// size can't turn into audible clipping/crackling on louder passages.
+const PLAYBACK_GAIN = 1.6;
+
 /* Plays a ready-made AudioBuffer — the shared final step for both a pre-generated
    clip (decoded from a fetched MP3) and Kokoro's raw live output (wrapped into a
    buffer by playRawAudio below), so Stop, speed control, and sequencing behave
    identically no matter which source the audio came from. */
-function playAudioBuffer(buffer, myToken){
+async function playAudioBuffer(buffer, myToken){
+  // Browsers auto-suspend a shared AudioContext after the page sits idle for a
+  // while (power-saving, or iOS backgrounding it). ensureAudioContext() kicks off
+  // resume() but doesn't wait for it, since it must run synchronously inside a
+  // click handler — so without this explicit wait here, playback could start
+  // (silently) before the context had actually finished resuming, which is what
+  // made Listen buttons go quiet specifically after the app had been left open
+  // and unused for a bit. This is the one place that matters: every clip and
+  // every fallback-to-native-voice path funnels through here before any sound
+  // is actually produced.
+  if(kokoroAudioCtx.state === "suspended"){
+    try{ await kokoroAudioCtx.resume(); }catch(e){ /* ignore — will just stay silent if truly blocked */ }
+  }
+  if(myToken !== undefined && myToken !== kokoroPlaybackToken) return;
   return new Promise((resolve) => {
     if(myToken !== undefined && myToken !== kokoroPlaybackToken){ resolve(); return; }
     const source = kokoroAudioCtx.createBufferSource();
     source.buffer = buffer;
     source.playbackRate.value = currentSpeedMultiplier();
-    source.connect(kokoroAudioCtx.destination);
+    // Volume boost (PLAYBACK_GAIN) feeding a soft limiter, instead of connecting
+    // straight to the destination — the limiter gently caps any peaks the gain
+    // pushes past full volume, so louder passages are evened out rather than
+    // clipping/crackling, instead of just turning everything up uniformly.
+    const gainNode = kokoroAudioCtx.createGain();
+    gainNode.gain.value = PLAYBACK_GAIN;
+    const limiter = kokoroAudioCtx.createDynamicsCompressor();
+    limiter.threshold.value = -6;
+    limiter.knee.value = 6;
+    limiter.ratio.value = 12;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.15;
+    source.connect(gainNode).connect(limiter).connect(kokoroAudioCtx.destination);
     kokoroCurrentSource = source;
     source.onended = () => { if(kokoroCurrentSource === source) kokoroCurrentSource = null; resolve(); };
     source.start();
