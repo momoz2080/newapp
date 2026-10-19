@@ -30769,6 +30769,13 @@ function missedDayAlertActive(){
   const yestKey = localDateKey(yest);
   if(yestKey < firstKey) return false;
   if(active.has(todayKey)) return false;
+  // A week resets cleanly every Monday (see weekMeetsStreakRule — missing the last
+  // day of one week never counts against the next). So if yesterday fell in a
+  // different, already-closed week than today — which is always true on a Monday,
+  // since "yesterday" is Sunday of the week that just ended — flagging it would be
+  // warning about a gap that no longer has any bearing on this week's streak. The
+  // brand-new week hasn't had a chance to build a real gap yet.
+  if(startOfWeek(yest).getTime() !== startOfWeek(now).getTime()) return false;
   return !active.has(yestKey);
 }
 
