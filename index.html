@@ -768,7 +768,7 @@ const UI = {
     speakStatusPtt:"Tap the mic, say your reply, then tap again.",
     speakKicker:"Speaking practice",
     speakTitle:"Talk with Grace",
-    speakIntro:"Press Talk and just speak. Grace listens, answers, and reads her answers aloud. Mute pauses your microphone, and End talk finishes the call. Practice only — it doesn't affect your rewards.",
+    speakIntro:"Tap the mic, speak, and Grace answers when you stop. You can also type below. Practice only — it doesn't affect your rewards.",
     speakGraceName:"Grace",
     speakMicStart:"Tap to speak",
     speakMicListening:"Listening… go ahead.",
@@ -792,7 +792,7 @@ const UI = {
     speakMuteBtn:"Mute",
     speakUnmuteBtn:"Unmute",
     speakEndBtn:"End talk",
-    speakStatusIdle:"Press Talk to start a conversation.",
+    speakStatusIdle:"Tap the mic and speak. Grace answers when you stop.",
     speakStatusCall:"Connected. Go ahead, whenever you're ready.",
     speakStatusMuted:"Muted. Tap Unmute to speak.",
     speakStatusSpeaking:"Grace is speaking…",
@@ -878,7 +878,7 @@ const UI = {
     speakStatusPtt:"ضربه بزنید، پاسخ خود را بگویید، سپس دوباره ضربه بزنید.",
     speakKicker:"تمرین صحبت کردن",
     speakTitle:"صحبت با گریس",
-    speakIntro:"«بیایید صحبت کنیم!» را بزنید و فقط صحبت کنید. گریس می‌شنود، پاسخ می‌دهد و پاسخ‌هایش را با صدا می‌خواند. «بی‌صدا» میکروفون را متوقف می‌کند و «پایان گفتگو» تماس را تمام می‌کند. این فقط تمرین است و روی پاداش‌های شما تأثیری ندارد.",
+    speakIntro:"روی میکروفون بزنید و صحبت کنید. وقتی ساکت شوید، گریس پاسخ می‌دهد. می‌توانید پایین صفحه هم بنویسید. این فقط تمرین است و روی پاداش‌ها اثری ندارد.",
     speakGraceName:"گریس",
     speakMicStart:"برای صحبت بزنید",
     speakMicListening:"در حال شنیدن… بفرمایید.",
@@ -902,7 +902,7 @@ const UI = {
     speakMuteBtn:"بی‌صدا",
     speakUnmuteBtn:"صدادار",
     speakEndBtn:"پایان گفتگو",
-    speakStatusIdle:"برای شروع گفتگو، «بیایید صحبت کنیم!» را بزنید.",
+    speakStatusIdle:"روی میکروفون بزنید و صحبت کنید. وقتی ساکت شوید، گریس پاسخ می‌دهد.",
     speakStatusCall:"متصل شدید. هر وقت آماده بودید صحبت کنید.",
     speakStatusMuted:"بی‌صدا. برای صحبت «صدادار» را بزنید.",
     speakStatusSpeaking:"گریس در حال صحبت است…",
@@ -31479,29 +31479,26 @@ function renderUnitHub(main, unitId){
 }
 
 /* ---------------- Speak with Grace (gs-) ----------------
-   A voice call with Grace about the unit on screen, Semester 1 only. The round
-   red "Let's talk!" button starts the call and listening begins on its own.
-   Turns go back and forth: you speak, Grace replies, she reads the reply aloud,
-   then listening resumes. Mute pauses your microphone; End talk ends the call
-   and the button reads "Talk" again. The conversation is kept in memory for this
-   visit only: it isn't saved and doesn't affect rewards or progress. Replies come
-   from the Grace backend (grace-speaking-backend, a Cloudflare Worker) which holds
-   the Anthropic key. The class code is typed once per device and kept in that
-   browser only. */
+   Talk with Grace about the unit on screen, Semester 1 only. It opens from the small
+   mic under the unit's optional activities, and nothing starts by itself. The student
+   taps the mic, speaks, and Grace answers once the student stops talking. Replies to
+   spoken turns are read aloud. The conversation is kept in memory for this visit only:
+   it isn't saved and doesn't affect rewards or progress. Replies come from the Grace
+   backend (grace-speaking-backend, a Cloudflare Worker) which holds the Anthropic key.
+   The class code is typed once per device and kept in that browser only. */
 const GRACE_WORKER_URL = "https://grace-speaking-backend.momoz203050.workers.dev";
 const GRACE_OPENING_EN = "Hello! Let's practise this unit together. Tell me one thing you remember from today's lesson.";
 const GS_VOICE_PREFERRED = ["Google US English", "Samantha", "Ava", "Allison", "Karen", "Moira",
   "Microsoft Aria Online (Natural) - English (United States)",
   "Microsoft Jenny Online (Natural) - English (United States)"];
-let graceSpeak = null; // one conversation at a time; see renderSpeakGrace()
-// Grace's voice: Kokoro, an open voice model that runs in the browser (no per-character cost).
+// Grace's voice: the built-in browser voice is used now. Kokoro (an open voice model that
+// runs on the device) is kept below and is switched on by setting this to true.
+const GS_USE_KOKORO = false;
 const GS_KOKORO_URL = "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm";
 const GS_KOKORO_MODEL = "onnx-community/Kokoro-82M-v1.0-ONNX";
 const GS_KOKORO_VOICE = "af_heart";
+let graceSpeak = null; // one conversation at a time; see renderSpeakGrace()
 let gsKokoroTTS = null, gsKokoroPromise = null, gsKokoroFailed = false, gsAudio = null, gsAudioEl = null;
-// iPhone and iPad: the browser's listening is unreliable there, so each turn is started and
-// finished with a tap ("push to talk") instead of listening by itself.
-const GS_PTT = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 function gsEsc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -31518,9 +31515,9 @@ function gsUnitPayload(unit){
   };
 }
 
-/* Voices. Chrome loads its voice list asynchronously, so the list is read each
-   time Grace speaks, and the picker refreshes when the list changes. A voice
-   chosen in the picker is remembered on this device. */
+/* Built-in voices. Chrome loads its voice list asynchronously, so the list is read each
+   time Grace speaks, and the picker refreshes when the list changes. A voice chosen in
+   the picker is remembered on this device. */
 function gsVoices(){
   if(!window.speechSynthesis) return [];
   return (window.speechSynthesis.getVoices() || []).filter(v=> v.lang && v.lang.indexOf("en") === 0);
@@ -31544,72 +31541,39 @@ if(window.speechSynthesis){
   window.speechSynthesis.onvoiceschanged = ()=>{ gsRenderVoicePicker(); };
 }
 
-function gsHandsetIcon(){
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>`;
-}
-function gsMicIcon(muted){
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>${muted ? '<line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' : ""}</svg>`;
+function gsMicIcon(){
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>`;
 }
 
-/* ---- Screen controls: the round button changes with the call state ---- */
+/* ---- Screen controls: one mic. Nothing is pressed all the time. ---- */
 function gsRefreshControls(){
   const s = graceSpeak; if(!s) return;
   const L = t();
-  const key = [s.call, s.muted, s.ended, !!s.recognition, GS_PTT ? s.listening : ""].join("|");
+  const key = [s.listening, s.busy, !!s.recognition].join("|");
   const wrap = document.getElementById("gsControls");
   if(wrap && s.controlsKey !== key){
     s.controlsKey = key;
-    if(s.call && GS_PTT){
-      wrap.innerHTML = `<div class="gs-call">
-        <div class="gs-callbtn-wrap">
-          <button class="gs-mic3d${s.listening ? " on" : ""}" id="gsTalkBtn" type="button" aria-pressed="${s.listening ? "true" : "false"}">${gsMicIcon(false)}</button>
-          <span class="gs-cap">${s.listening ? L.speakTapSend : L.speakTapTalk}</span>
-        </div>
-        <div class="gs-callbtn-wrap">
-          <button class="gs-round gs-hangup" id="gsEndBtn" type="button">${gsHandsetIcon()}</button>
-          <span class="gs-cap">${L.speakEndBtn}</span>
-        </div>
-      </div>`;
-      document.getElementById("gsTalkBtn").addEventListener("click", gsPttTap);
-      document.getElementById("gsEndBtn").addEventListener("click", gsEndCall);
-    } else if(s.call){
-      wrap.innerHTML = `<div class="gs-call">
-        <div class="gs-callbtn-wrap">
-          <button class="gs-round gs-mute${s.muted ? " on" : ""}" id="gsMuteBtn" type="button" aria-pressed="${s.muted ? "true" : "false"}">${gsMicIcon(s.muted)}</button>
-          <span class="gs-cap">${s.muted ? L.speakUnmuteBtn : L.speakMuteBtn}</span>
-        </div>
-        <div class="gs-callbtn-wrap">
-          <button class="gs-round gs-hangup" id="gsEndBtn" type="button">${gsHandsetIcon()}</button>
-          <span class="gs-cap">${L.speakEndBtn}</span>
-        </div>
-      </div>`;
-      document.getElementById("gsMuteBtn").addEventListener("click", gsToggleMute);
-      document.getElementById("gsEndBtn").addEventListener("click", gsEndCall);
-    } else {
-      wrap.innerHTML = `<div class="gs-call">
-        <div class="gs-mic3d-stack">
-          <span class="gs-talk3d-label">${L.speakTalkAgain}</span>
-          <button class="gs-mic3d" id="gsStartBtn" type="button" aria-label="${L.speakTalkAgain}"${s.recognition ? "" : " disabled"}>${gsMicIcon(false)}</button>
-        </div>
-      </div>`;
-      document.getElementById("gsStartBtn").addEventListener("click", gsStartCall);
-    }
+    wrap.innerHTML = `<div class="gs-call">
+      <div class="gs-mic3d-stack">
+        <span class="gs-talk3d-label">${s.listening ? L.speakMicListening : L.speakTalkAgain}</span>
+        <button class="gs-mic3d${s.listening ? " on" : ""}" id="gsStartBtn" type="button" aria-pressed="${s.listening ? "true" : "false"}"${s.recognition && !s.busy ? "" : " disabled"}>${gsMicIcon()}</button>
+      </div>
+    </div>`;
+    document.getElementById("gsStartBtn").addEventListener("click", gsTalkTap);
   }
   const status = document.getElementById("gsStatus");
   if(status){
     let text;
     if(!s.recognition) text = L.speakNoMic;
     else if(s.errorText) text = s.errorText;
-    else if(s.call && s.muted) text = L.speakStatusMuted;
-    else if(s.call && s.speaking) text = L.speakStatusSpeaking;
-    else if(s.call && s.busy) text = L.speakThinking;
-    else if(s.call && s.listening) text = L.speakMicListening;
-    else if(s.call) text = GS_PTT ? L.speakStatusPtt : L.speakStatusCall;
-    else text = s.ended ? L.speakStatusEnded : L.speakStatusIdle;
+    else if(s.busy) text = L.speakThinking;
+    else if(s.speaking) text = L.speakStatusSpeaking;
+    else if(s.listening) text = L.speakMicListening;
+    else text = L.speakStatusIdle;
     status.textContent = text;
   }
   const tr = document.getElementById("gsTranscript");
-  if(tr) tr.textContent = s.call ? (s.transcript || "") : "";
+  if(tr) tr.textContent = s.listening ? (s.transcript || "") : "";
   const input = document.getElementById("gsTypeInput");
   const send = document.getElementById("gsSendBtn");
   if(input) input.disabled = !!s.busy;
@@ -31634,14 +31598,11 @@ function gsReleaseAudio(){
   try{ URL.revokeObjectURL(gsAudio.url); }catch(e){}
   gsAudio = null;
 }
-/* Loads the Kokoro model once per page visit. The browser caches the download, so
-   later visits start quickly. Any failure switches Grace to the built-in voice. */
+/* Loads the Kokoro model once per page visit (only used when GS_USE_KOKORO is true). */
 function gsKokoroLoad(){
   if(!gsKokoroPromise){
     gsKokoroPromise = import(GS_KOKORO_URL)
       .then(async m => {
-        // Graphics chip first (much faster on newer iPhones, iPads and laptops);
-        // if that isn't available, the processor version.
         if(navigator.gpu){
           try{ return await m.KokoroTTS.from_pretrained(GS_KOKORO_MODEL, { dtype: "fp32", device: "webgpu" }); }
           catch(err){ console.warn("Grace's voice: graphics chip not usable, using processor.", err); }
@@ -31668,30 +31629,8 @@ function gsWavBlob(samples, rate){
   }
   return new Blob([buf], { type: "audio/wav" });
 }
-function gsSpeak(text, btn){
-  const s = graceSpeak; const L = t();
-  if(btn && btn.classList.contains("speaking")){ gsStopSpeech(); gsResumeListen(); gsRefreshControls(); return; }
-  gsStopSpeech();
-  const tok = s ? s.speakToken : 0;
-  if(s) s.speaking = true;
-  gsStopListen(); // don't let the microphone hear Grace
-  if(btn){ btn.classList.add("speaking"); btn.textContent = L.speakStop; }
-  gsRefreshControls();
-  let finished = false;
-  const done = ()=>{
-    if(finished) return;
-    if(s && tok !== s.speakToken) return;
-    finished = true;
-    if(s) s.speaking = false;
-    if(btn){ btn.classList.remove("speaking"); btn.textContent = L.speakListen; }
-    gsResumeListen();
-    gsRefreshControls();
-  };
-  if(gsKokoroFailed) gsSpeakBrowser(text, tok, done);
-  else gsSpeakKokoro(text, tok, done);
-}
-/* iPhone Safari only plays sound that starts from a tap. So the first tap unlocks one
-   audio element and the browser voice, and every later reply reuses them. */
+/* iPhone Safari only plays sound that starts from a tap. So the first tap on the mic
+   unlocks one audio element and the browser voice, and later replies reuse them. */
 function gsSharedAudio(){
   if(!gsAudioEl) gsAudioEl = new Audio();
   return gsAudioEl;
@@ -31699,7 +31638,7 @@ function gsSharedAudio(){
 function gsUnlockAudio(){
   try{
     const el = gsSharedAudio();
-    el.src = URL.createObjectURL(gsWavBlob(new Float32Array(2400), 24000)); // a short silent clip
+    el.src = URL.createObjectURL(gsWavBlob(new Float32Array(2400), 24000));
     const p = el.play(); if(p && p.catch) p.catch(()=>{});
   }catch(e){ /* ignore */ }
   try{
@@ -31713,11 +31652,8 @@ function gsWithTimeout(p, ms){
 }
 async function gsSpeakKokoro(text, tok, done){
   const s = graceSpeak;
-  const statusEl = document.getElementById("gsStatus");
   try{
-    if(!gsKokoroTTS && statusEl) statusEl.textContent = t().speakVoiceLoading;
     const tts = await gsWithTimeout(gsKokoroLoad(), 120000);
-    if(statusEl && statusEl.textContent === t().speakVoiceLoading) statusEl.textContent = "";
     if(s && tok !== s.speakToken) return;
     const audio = await gsWithTimeout(tts.generate(text, { voice: GS_KOKORO_VOICE }), 20000);
     if(s && tok !== s.speakToken) return;
@@ -31731,9 +31667,7 @@ async function gsSpeakKokoro(text, tok, done){
   }catch(err){
     if(s && tok !== s.speakToken) return;
     gsReleaseAudio();
-    // Kokoro couldn't load or play on this device: use the built-in voice from now on.
-    gsKokoroFailed = true;
-    if(statusEl) statusEl.textContent = "";
+    gsKokoroFailed = true; // use the built-in voice from now on
     gsSpeakBrowser(text, tok, done);
   }
 }
@@ -31748,8 +31682,28 @@ function gsSpeakBrowser(text, tok, done){
   u.onend = finish; u.onerror = finish;
   window.speechSynthesis.speak(u);
 }
+function gsSpeak(text, btn){
+  const s = graceSpeak; const L = t();
+  if(btn && btn.classList.contains("speaking")){ gsStopSpeech(); gsRefreshControls(); return; }
+  gsStopSpeech();
+  const tok = s ? s.speakToken : 0;
+  if(s) s.speaking = true;
+  if(btn){ btn.classList.add("speaking"); btn.textContent = L.speakStop; }
+  gsRefreshControls();
+  let finished = false;
+  const done = ()=>{
+    if(finished) return;
+    if(s && tok !== s.speakToken) return;
+    finished = true;
+    if(s) s.speaking = false;
+    if(btn){ btn.classList.remove("speaking"); btn.textContent = L.speakListen; }
+    gsRefreshControls();
+  };
+  if(GS_USE_KOKORO && !gsKokoroFailed) gsSpeakKokoro(text, tok, done);
+  else gsSpeakBrowser(text, tok, done);
+}
 
-/* ---- Listening (the student's voice) ---- */
+/* ---- Listening: one turn at a time. Grace answers when the student stops talking. ---- */
 function gsSetupMic(s){
   const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!Rec) return;
@@ -31766,75 +31720,39 @@ function gsSetupMic(s){
     gsRefreshControls();
   };
   rec.onend = ()=>{
+    // The browser ends listening by itself when the student pauses; send what was heard.
     s.listening = false;
     const text = (s.finalText || s.transcript || "").trim();
     s.finalText = ""; s.transcript = "";
-    if(text && s.call){ gsRefreshControls(); gsSend(text); return; } // gsSend resumes listening after Grace's reply
     gsRefreshControls();
-    setTimeout(gsResumeListen, 250); // a pause ends a listening turn; start the next one
+    if(text && !s.discard) gsSend(text, true);
   };
   rec.onerror = (e)=>{
     s.listening = false;
-    if(e.error === "not-allowed" || e.error === "service-not-allowed"){
-      s.call = false; s.muted = false; s.ended = true;
-      s.errorText = t().speakMicBlocked;
-    }
+    if(e.error === "not-allowed" || e.error === "service-not-allowed") s.errorText = t().speakMicBlocked;
+    else if(e.error === "no-speech") s.errorText = t().speakMicMissed;
     gsRefreshControls();
   };
   s.recognition = rec;
 }
-function gsListen(){
-  if(GS_PTT) return; // iPhone: the student taps to talk
-  const s = graceSpeak;
-  if(!s || !s.recognition || !s.call || s.muted || s.busy || s.speaking || s.listening) return;
-  s.finalText = ""; s.transcript = "";
-  try{ s.recognition.start(); s.listening = true; }catch(e){ s.listening = false; }
-  gsRefreshControls();
-}
-function gsResumeListen(){ gsListen(); }
-function gsStopListen(){
-  const s = graceSpeak;
-  if(s && s.recognition && s.listening){ try{ s.recognition.stop(); }catch(e){} }
-}
-
-/* ---- Call controls ---- */
-function gsStartCall(){
-  const s = graceSpeak; if(!s || !s.recognition) return;
-  if(!gsGetCode()){ s.pendingCall = true; gsRenderCodeBox(); return; }
-  s.call = true; s.muted = false; s.ended = false; s.errorText = "";
+// The mic: a tap starts listening; another tap ends it early and sends what was said.
+function gsTalkTap(){
+  const s = graceSpeak; if(!s || !s.recognition || s.busy) return;
+  if(s.listening){ try{ s.recognition.stop(); }catch(e){} return; }
+  if(!gsGetCode()){ s.pendingTalk = true; gsRenderCodeBox(); return; }
   gsUnlockAudio();
-  if(!gsKokoroFailed) gsKokoroLoad().catch(()=>{}); // start loading Grace's voice now
-  gsRefreshControls();
-  gsListen();
-}
-// iPhone: one tap starts listening, the next tap sends what was said.
-function gsPttTap(){
-  const s = graceSpeak; if(!s || !s.call || !s.recognition || s.busy) return;
-  if(s.listening){ try{ s.recognition.stop(); }catch(e){} return; } // onend sends the text
-  gsUnlockAudio();
-  gsStopSpeech(); // a tap while Grace is talking stops her
+  gsStopSpeech(); // tapping while Grace is talking stops her
+  s.errorText = "";
+  s.discard = false;
   s.finalText = ""; s.transcript = "";
   try{ s.recognition.start(); s.listening = true; }
   catch(e){ s.listening = false; s.errorText = t().speakMicMissed; }
   gsRefreshControls();
 }
-function gsEndCall(){
-  const s = graceSpeak; if(!s) return;
-  s.call = false; s.muted = false; s.ended = true; s.pendingCall = false;
-  gsStopListen(); gsStopSpeech();
-  gsRefreshControls();
-}
-function gsToggleMute(){
-  const s = graceSpeak; if(!s || !s.call) return;
-  s.muted = !s.muted;
-  if(s.muted) gsStopListen(); else gsListen();
-  gsRefreshControls();
-}
-// Called by navTo() whenever the student leaves a screen: a call ends when you leave.
+// Called by navTo() whenever the student leaves the screen: nothing keeps listening.
 function graceStopAll(){
   const s = graceSpeak;
-  if(s && s.call){ s.call = false; s.muted = false; s.ended = true; }
-  gsStopListen();
+  if(s && s.listening){ s.discard = true; try{ s.recognition.stop(); }catch(e){} s.listening = false; }
   gsStopSpeech();
 }
 
@@ -31859,8 +31777,8 @@ function gsRenderCodeBox(){
     gsSetCode(code);
     gsRenderCodeBox();
     const s = graceSpeak; if(!s) return;
-    if(s.pendingCall){ s.pendingCall = false; gsStartCall(); return; }
-    if(s.pendingText){ const p = s.pendingText; s.pendingText = null; gsSend(p); }
+    if(s.pendingTalk){ s.pendingTalk = false; gsTalkTap(); return; }
+    if(s.pendingText){ const p = s.pendingText; const v = s.pendingVoice; s.pendingText = null; gsSend(p, v); }
   });
   const input = document.getElementById("gsCodeInput");
   if(input) input.focus();
@@ -31890,11 +31808,12 @@ function gsRenderLog(){
   });
   if(el.lastElementChild) el.lastElementChild.scrollIntoView({block:"end", behavior:"smooth"});
 }
-function gsSend(text){
+// voice = true when the student spoke this turn; only spoken turns get a spoken reply.
+function gsSend(text, voice){
   const s = graceSpeak; if(!s || s.busy) return;
   const L = t();
   const code = gsGetCode();
-  if(!code){ s.pendingText = text; gsRenderCodeBox(); return; }
+  if(!code){ s.pendingText = text; s.pendingVoice = !!voice; gsRenderCodeBox(); return; }
   const unit = findUnit(s.unitId).unit;
   s.busy = true;
   s.log.push({kind:"you", text});
@@ -31921,7 +31840,7 @@ function gsSend(text){
     s.messages.push({role:"assistant", content:reply});
     s.log.push({kind:"grace", text:reply});
     gsRenderLog();
-    if(s.call){ // only speak the reply while a call is running
+    if(voice){
       const btns = document.querySelectorAll(".gs-listen");
       gsSpeak(reply, btns[btns.length - 1] || null);
     }
@@ -31932,8 +31851,7 @@ function gsSend(text){
     if(err && err.code === "unauthorized"){
       // The stored class code is wrong or has been changed: forget it and ask again.
       gsSetCode("");
-      s.pendingText = null; s.pendingCall = false;
-      s.call = false; s.muted = false; s.ended = true;
+      s.pendingText = null; s.pendingTalk = false;
       s.errorText = L.speakErrCode;
       gsRenderLog(); gsRenderCodeBox(); gsRefreshControls();
       return;
@@ -31943,16 +31861,11 @@ function gsSend(text){
   })
   .finally(()=>{
     s.busy = false;
-    if(!s.speaking) gsResumeListen();
     gsRefreshControls();
   });
 }
 
-/* A small mic button under the unit's optional activities. Pressing it opens
-   the conversation and starts the call straight away. */
-function gsMicIcon(){
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>`;
-}
+/* A small mic under the unit's optional activities. Opens the chat; nothing starts by itself. */
 function gsHubButtonHtml(unitId, L){
   return `<div class="gs-hub-talk">
     <button class="gs-mic-btn" type="button" onclick="gsHubTalk(${unitId})">
@@ -31962,7 +31875,7 @@ function gsHubButtonHtml(unitId, L){
   </div>`;
 }
 function gsHubTalk(unitId){
-  navTo({name:"speak", unitId, autostart:true});
+  navTo({name:"speak", unitId});
 }
 
 function renderSpeakGrace(main, unitId){
@@ -31975,14 +31888,13 @@ function renderSpeakGrace(main, unitId){
       unitId,
       log: [{kind:"grace", text: GRACE_OPENING_EN}],
       messages: [{role:"assistant", content: GRACE_OPENING_EN}],
-      busy: false, call: false, muted: false, ended: false,
-      listening: false, speaking: false, speakToken: 0,
-      recognition: null, transcript: "", finalText: "",
-      pendingText: null, pendingCall: false, errorText: "", controlsKey: null
+      busy: false, listening: false, speaking: false, speakToken: 0,
+      recognition: null, transcript: "", finalText: "", discard: false,
+      pendingText: null, pendingVoice: false, pendingTalk: false, errorText: "", controlsKey: null
     };
   }
   const s = graceSpeak;
-  s.controlsKey = null; // this screen is new, so its buttons must be drawn again
+  s.controlsKey = null; // this screen is new, so its controls must be drawn again
   main.innerHTML = `<div class="screen gs-screen">
     <div class="back-row"><button class="back-btn" id="gsBackBtn">← ${L.speakBackToUnit}</button></div>
     <div class="unit-header">
@@ -32015,7 +31927,7 @@ function renderSpeakGrace(main, unitId){
     const text = input.value.trim();
     if(!text || s.busy) return;
     input.value = "";
-    gsSend(text);
+    gsSend(text, false);
   });
 
   if(!s.recognition) gsSetupMic(s);
@@ -32023,8 +31935,6 @@ function renderSpeakGrace(main, unitId){
   gsRenderLog();
   gsRefreshControls();
   gsRenderVoicePicker();
-  // Opened from the unit's round button: start the call straight away.
-  if(currentScreen.autostart){ currentScreen.autostart = false; gsStartCall(); }
 }
 
 /* ---------------- Activity router ---------------- */
