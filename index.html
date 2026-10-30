@@ -232,6 +232,15 @@ body.dari-mode .streak-strip-title{ font-family: var(--dari); }
 .gs-dial:active:not(:disabled){ transform:translateY(6px); box-shadow: 0 0 0 8px #f3ead9, 0 0 0 10px #8e1414, 0 6px 0 10px #6e0e0e, 0 12px 18px rgba(140,20,20,0.3), inset 0 -4px 10px rgba(0,0,0,0.25); }
 .gs-dial-label{ font-weight:800; font-size:1.2rem; text-shadow:0 2px 0 rgba(0,0,0,0.25); }
 .gs-hub-talk{ display:flex; justify-content:center; padding:18px 0 8px; }
+.gs-mic3d-stack{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+.gs-talk3d-label{ font-weight:800; font-size:1.05rem; color:var(--indigo); letter-spacing:0.02em; }
+.gs-mic3d{ width:88px; height:88px; border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; background: radial-gradient(circle at 34% 26%, #d3d7e8 0%, #6b7088 38%, #2b2f44 75%, #1a1d2e 100%); box-shadow: 0 0 0 6px #efe6d2, 0 0 0 8px #4a4f68, 0 9px 0 8px #12142a, 0 18px 24px rgba(20,22,40,0.35), inset 0 3px 6px rgba(255,255,255,0.3), inset 0 -6px 10px rgba(0,0,0,0.35); transition: transform 0.08s ease; }
+.gs-mic3d svg{ width:40%; height:40%; fill:#f4f5fa; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45)); }
+.gs-mic3d:active:not(:disabled){ transform: translateY(5px); }
+.gs-mic3d:disabled{ opacity:0.5; cursor:default; }
+.gs-mic3d:focus-visible{ outline:3px solid var(--gold); outline-offset:6px; }
+.gs-mic3d.on{ box-shadow: 0 0 0 6px #efe6d2, 0 0 0 8px #d4a43a, 0 9px 0 8px #12142a, 0 0 28px rgba(212,164,58,0.6), inset 0 3px 6px rgba(255,255,255,0.3), inset 0 -6px 10px rgba(0,0,0,0.35); }
+.gs-talk.on{ background: radial-gradient(circle at 36% 30%, #ff6b6b, #c81e1e 70%); box-shadow: 0 6px 0 #7a0f0f, 0 10px 16px rgba(150,20,20,0.3); animation: gs-pulse 1.2s ease-in-out infinite; }
 .gs-mic-btn{ display:flex; align-items:center; gap:10px; padding:6px 18px 6px 6px; background:#fff; border:1px solid var(--line); border-radius:999px; cursor:pointer; font:inherit; color:var(--indigo); box-shadow:0 2px 6px rgba(0,0,0,0.06); }
 .gs-mic-btn:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
 .gs-mic-icon{ width:34px; height:34px; border-radius:50%; background:var(--sage); color:#fff; display:flex; align-items:center; justify-content:center; }
@@ -754,9 +763,12 @@ const UI = {
     earnedForReview:"Review bonus",
     speakTileName:"Speak with Grace",
     speakVoiceLoading:"Preparing Grace's voice… (first time only)",
+    speakTapTalk:"Tap to talk",
+    speakTapSend:"Tap when you're done",
+    speakStatusPtt:"Tap the mic, say your reply, then tap again.",
     speakKicker:"Speaking practice",
     speakTitle:"Talk with Grace",
-    speakIntro:"Press Let's talk! and just speak. Grace listens, answers, and reads her answers aloud. Mute pauses your microphone, and End talk finishes the call. Practice only — it doesn't affect your rewards.",
+    speakIntro:"Press Talk and just speak. Grace listens, answers, and reads her answers aloud. Mute pauses your microphone, and End talk finishes the call. Practice only — it doesn't affect your rewards.",
     speakGraceName:"Grace",
     speakMicStart:"Tap to speak",
     speakMicListening:"Listening… go ahead.",
@@ -780,7 +792,7 @@ const UI = {
     speakMuteBtn:"Mute",
     speakUnmuteBtn:"Unmute",
     speakEndBtn:"End talk",
-    speakStatusIdle:"Press Let's talk! to start a conversation.",
+    speakStatusIdle:"Press Talk to start a conversation.",
     speakStatusCall:"Connected. Go ahead, whenever you're ready.",
     speakStatusMuted:"Muted. Tap Unmute to speak.",
     speakStatusSpeaking:"Grace is speaking…",
@@ -861,6 +873,9 @@ const UI = {
     earnedForReview:"جایزه بازبینی",
     speakTileName:"صحبت با گریس",
     speakVoiceLoading:"در حال آماده‌سازی صدای گریس… (فقط بار اول)",
+    speakTapTalk:"برای صحبت ضربه بزنید",
+    speakTapSend:"وقتی تمام شد، دوباره ضربه بزنید",
+    speakStatusPtt:"ضربه بزنید، پاسخ خود را بگویید، سپس دوباره ضربه بزنید.",
     speakKicker:"تمرین صحبت کردن",
     speakTitle:"صحبت با گریس",
     speakIntro:"«بیایید صحبت کنیم!» را بزنید و فقط صحبت کنید. گریس می‌شنود، پاسخ می‌دهد و پاسخ‌هایش را با صدا می‌خواند. «بی‌صدا» میکروفون را متوقف می‌کند و «پایان گفتگو» تماس را تمام می‌کند. این فقط تمرین است و روی پاداش‌های شما تأثیری ندارد.",
@@ -31483,7 +31498,10 @@ let graceSpeak = null; // one conversation at a time; see renderSpeakGrace()
 const GS_KOKORO_URL = "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm";
 const GS_KOKORO_MODEL = "onnx-community/Kokoro-82M-v1.0-ONNX";
 const GS_KOKORO_VOICE = "af_heart";
-let gsKokoroTTS = null, gsKokoroPromise = null, gsKokoroFailed = false, gsAudio = null;
+let gsKokoroTTS = null, gsKokoroPromise = null, gsKokoroFailed = false, gsAudio = null, gsAudioEl = null;
+// iPhone and iPad: the browser's listening is unreliable there, so each turn is started and
+// finished with a tap ("push to talk") instead of listening by itself.
+const GS_PTT = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 function gsEsc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -31537,11 +31555,24 @@ function gsMicIcon(muted){
 function gsRefreshControls(){
   const s = graceSpeak; if(!s) return;
   const L = t();
-  const key = [s.call, s.muted, s.ended, !!s.recognition].join("|");
+  const key = [s.call, s.muted, s.ended, !!s.recognition, GS_PTT ? s.listening : ""].join("|");
   const wrap = document.getElementById("gsControls");
   if(wrap && s.controlsKey !== key){
     s.controlsKey = key;
-    if(s.call){
+    if(s.call && GS_PTT){
+      wrap.innerHTML = `<div class="gs-call">
+        <div class="gs-callbtn-wrap">
+          <button class="gs-mic3d${s.listening ? " on" : ""}" id="gsTalkBtn" type="button" aria-pressed="${s.listening ? "true" : "false"}">${gsMicIcon(false)}</button>
+          <span class="gs-cap">${s.listening ? L.speakTapSend : L.speakTapTalk}</span>
+        </div>
+        <div class="gs-callbtn-wrap">
+          <button class="gs-round gs-hangup" id="gsEndBtn" type="button">${gsHandsetIcon()}</button>
+          <span class="gs-cap">${L.speakEndBtn}</span>
+        </div>
+      </div>`;
+      document.getElementById("gsTalkBtn").addEventListener("click", gsPttTap);
+      document.getElementById("gsEndBtn").addEventListener("click", gsEndCall);
+    } else if(s.call){
       wrap.innerHTML = `<div class="gs-call">
         <div class="gs-callbtn-wrap">
           <button class="gs-round gs-mute${s.muted ? " on" : ""}" id="gsMuteBtn" type="button" aria-pressed="${s.muted ? "true" : "false"}">${gsMicIcon(s.muted)}</button>
@@ -31555,9 +31586,11 @@ function gsRefreshControls(){
       document.getElementById("gsMuteBtn").addEventListener("click", gsToggleMute);
       document.getElementById("gsEndBtn").addEventListener("click", gsEndCall);
     } else {
-      const label = s.ended ? L.speakTalkAgain : L.speakTalkBtn;
       wrap.innerHTML = `<div class="gs-call">
-        <button class="gs-round gs-dial" id="gsStartBtn" type="button"${s.recognition ? "" : " disabled"}>${gsHandsetIcon()}<span class="gs-dial-label">${label}</span></button>
+        <div class="gs-mic3d-stack">
+          <span class="gs-talk3d-label">${L.speakTalkAgain}</span>
+          <button class="gs-mic3d" id="gsStartBtn" type="button" aria-label="${L.speakTalkAgain}"${s.recognition ? "" : " disabled"}>${gsMicIcon(false)}</button>
+        </div>
       </div>`;
       document.getElementById("gsStartBtn").addEventListener("click", gsStartCall);
     }
@@ -31571,7 +31604,7 @@ function gsRefreshControls(){
     else if(s.call && s.speaking) text = L.speakStatusSpeaking;
     else if(s.call && s.busy) text = L.speakThinking;
     else if(s.call && s.listening) text = L.speakMicListening;
-    else if(s.call) text = L.speakStatusCall;
+    else if(s.call) text = GS_PTT ? L.speakStatusPtt : L.speakStatusCall;
     else text = s.ended ? L.speakStatusEnded : L.speakStatusIdle;
     status.textContent = text;
   }
@@ -31606,7 +31639,15 @@ function gsReleaseAudio(){
 function gsKokoroLoad(){
   if(!gsKokoroPromise){
     gsKokoroPromise = import(GS_KOKORO_URL)
-      .then(m => m.KokoroTTS.from_pretrained(GS_KOKORO_MODEL, { dtype: "q8", device: "wasm" }))
+      .then(async m => {
+        // Graphics chip first (much faster on newer iPhones, iPads and laptops);
+        // if that isn't available, the processor version.
+        if(navigator.gpu){
+          try{ return await m.KokoroTTS.from_pretrained(GS_KOKORO_MODEL, { dtype: "fp32", device: "webgpu" }); }
+          catch(err){ console.warn("Grace's voice: graphics chip not usable, using processor.", err); }
+        }
+        return m.KokoroTTS.from_pretrained(GS_KOKORO_MODEL, { dtype: "q8", device: "wasm" });
+      })
       .then(tts => { gsKokoroTTS = tts; return tts; })
       .catch(err => { gsKokoroPromise = null; gsKokoroFailed = true; throw err; });
   }
@@ -31649,18 +31690,40 @@ function gsSpeak(text, btn){
   if(gsKokoroFailed) gsSpeakBrowser(text, tok, done);
   else gsSpeakKokoro(text, tok, done);
 }
+/* iPhone Safari only plays sound that starts from a tap. So the first tap unlocks one
+   audio element and the browser voice, and every later reply reuses them. */
+function gsSharedAudio(){
+  if(!gsAudioEl) gsAudioEl = new Audio();
+  return gsAudioEl;
+}
+function gsUnlockAudio(){
+  try{
+    const el = gsSharedAudio();
+    el.src = URL.createObjectURL(gsWavBlob(new Float32Array(2400), 24000)); // a short silent clip
+    const p = el.play(); if(p && p.catch) p.catch(()=>{});
+  }catch(e){ /* ignore */ }
+  try{
+    if(window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+  }catch(e){ /* ignore */ }
+}
+function gsWithTimeout(p, ms){
+  let timer = null;
+  return Promise.race([p, new Promise((_, rej)=>{ timer = setTimeout(()=>rej(new Error("timeout")), ms); })])
+    .finally(()=> clearTimeout(timer));
+}
 async function gsSpeakKokoro(text, tok, done){
   const s = graceSpeak;
   const statusEl = document.getElementById("gsStatus");
   try{
     if(!gsKokoroTTS && statusEl) statusEl.textContent = t().speakVoiceLoading;
-    const tts = await gsKokoroLoad();
+    const tts = await gsWithTimeout(gsKokoroLoad(), 120000);
     if(statusEl && statusEl.textContent === t().speakVoiceLoading) statusEl.textContent = "";
     if(s && tok !== s.speakToken) return;
-    const audio = await tts.generate(text, { voice: GS_KOKORO_VOICE });
+    const audio = await gsWithTimeout(tts.generate(text, { voice: GS_KOKORO_VOICE }), 20000);
     if(s && tok !== s.speakToken) return;
     const url = URL.createObjectURL(gsWavBlob(audio.audio, audio.sampling_rate));
-    const el = new Audio(url);
+    const el = gsSharedAudio();
+    el.src = url;
     gsAudio = { el, url };
     el.onended = ()=>{ gsReleaseAudio(); done(); };
     el.onerror = ()=>{ gsReleaseAudio(); done(); };
@@ -31721,6 +31784,7 @@ function gsSetupMic(s){
   s.recognition = rec;
 }
 function gsListen(){
+  if(GS_PTT) return; // iPhone: the student taps to talk
   const s = graceSpeak;
   if(!s || !s.recognition || !s.call || s.muted || s.busy || s.speaking || s.listening) return;
   s.finalText = ""; s.transcript = "";
@@ -31738,9 +31802,21 @@ function gsStartCall(){
   const s = graceSpeak; if(!s || !s.recognition) return;
   if(!gsGetCode()){ s.pendingCall = true; gsRenderCodeBox(); return; }
   s.call = true; s.muted = false; s.ended = false; s.errorText = "";
+  gsUnlockAudio();
   if(!gsKokoroFailed) gsKokoroLoad().catch(()=>{}); // start loading Grace's voice now
   gsRefreshControls();
   gsListen();
+}
+// iPhone: one tap starts listening, the next tap sends what was said.
+function gsPttTap(){
+  const s = graceSpeak; if(!s || !s.call || !s.recognition || s.busy) return;
+  if(s.listening){ try{ s.recognition.stop(); }catch(e){} return; } // onend sends the text
+  gsUnlockAudio();
+  gsStopSpeech(); // a tap while Grace is talking stops her
+  s.finalText = ""; s.transcript = "";
+  try{ s.recognition.start(); s.listening = true; }
+  catch(e){ s.listening = false; s.errorText = t().speakMicMissed; }
+  gsRefreshControls();
 }
 function gsEndCall(){
   const s = graceSpeak; if(!s) return;
