@@ -30609,12 +30609,17 @@ async function storageSetRaw(key, value){
 }
 
 async function loadState(){
+  let parsed = null;
   try{
     const raw = await storageGetRaw(STORAGE_KEY);
-    state = raw ? JSON.parse(raw) : defaultState();
+    parsed = raw ? JSON.parse(raw) : null;
   }catch(e){
-    state = defaultState();
+    parsed = null;
   }
+  if(!parsed || typeof parsed !== "object") parsed = defaultState();
+  // Keep everything that is saved; only fill in the part the app cannot run without.
+  if(!parsed.unitProgress || typeof parsed.unitProgress !== "object") parsed.unitProgress = {};
+  state = parsed;
   // merge in any newly-added units, or newly-added optional-activity flags, so old saves stay compatible
   LEVELS.forEach(lv=> lv.units.forEach(u=>{
     if(!state.unitProgress[u.id]){
@@ -33513,11 +33518,17 @@ function renderCertificate(main, part){
 
 /* ---------------- Boot ---------------- */
 (async function init(){
-  await loadState();
-  const migrated = await migrateToUnitRewards();
-  const healed = await reconcileAwards();
-  const streakPaid = await checkWeeklyStreakBonuses();
-  updateWalletChip();
+  // Each start-up step runs on its own. If one step fails on an unusual saved state,
+  // the rest still run and the page still draws, instead of going blank.
+  const step = async (label, fn, fallback)=>{
+    try{ return await fn(); }
+    catch(err){ console.error("Crossroads start-up step failed: " + label, err); return fallback; }
+  };
+  await step("load progress", loadState, undefined);
+  const migrated = await step("unit rewards", migrateToUnitRewards, false);
+  const healed = await step("award check", reconcileAwards, false);
+  const streakPaid = await step("weekly bonus", checkWeeklyStreakBonuses, false);
+  try{ updateWalletChip(); }catch(err){ console.error("Crossroads start-up step failed: wallet chip", err); }
   setLang("en");
   if(migrated){
     showToast(lang==="en" ? "💰 Rewards now unlock per unit — any already-finished units were credited." : "💰 پاداش‌ها اکنون به ازای هر واحد است — واحدهای قبلاً تکمیل شده اعتبار داده شدند.");
