@@ -805,7 +805,7 @@ const UI = {
     speakBtnTalk:"Talk",
     speakBtnEnd:"End",
     speakNoticeTitle:"Before you talk to Grace",
-    speakNoticeBody:"This is a test of a new voice. Your voice is sent to Google, and Google may keep it and use it to improve its products. Please don't say your name, your address or other private details. You can also use the usual version instead.",
+    speakNoticeBody:"Your voice may be sent to Google to be understood, and Grace's answers are spoken with Google's voice. Google may keep these and use them to improve its products. Please don't say your name, your address or other private details. You can also use the usual version instead, which uses your phone's built-in voice.",
     speakNoticeYes:"Continue",
     speakNoticeNo:"Use the usual version",
     speakErrLiveCap:"The test is full for today. Please try again tomorrow.",
@@ -926,7 +926,7 @@ const UI = {
     speakBtnTalk:"صحبت",
     speakBtnEnd:"پایان",
     speakNoticeTitle:"پیش از صحبت با گریس",
-    speakNoticeBody:"این یک آزمایش صدای جدید است. صدای شما به گوگل فرستاده می‌شود و گوگل ممکن است آن را نگه دارد و برای بهتر کردن محصولاتش استفاده کند. لطفاً نام، آدرس یا اطلاعات خصوصی خود را نگویید. می‌توانید از نسخهٔ معمولی هم استفاده کنید.",
+    speakNoticeBody:"صدای شما ممکن است برای فهمیده شدن به گوگل فرستاده شود و پاسخ‌های گریس با صدای گوگل خوانده می‌شود. گوگل ممکن است این‌ها را نگه دارد و برای بهتر کردن محصولاتش استفاده کند. لطفاً نام، آدرس یا اطلاعات خصوصی خود را نگویید. می‌توانید از نسخهٔ معمولی هم استفاده کنید که از صدای داخلی تلفن شما استفاده می‌کند.",
     speakNoticeYes:"ادامه",
     speakNoticeNo:"استفاده از نسخهٔ معمولی",
     speakErrLiveCap:"آزمایش امروز پر شده است. لطفاً فردا دوباره امتحان کنید.",
@@ -31551,6 +31551,7 @@ function gsVariant(){
   return gsHash(code) % 2 === 0 ? "A" : "B";
 }
 function gsNoticeAccepted(){ try{ return localStorage.getItem("gs_live_ok") === "1"; }catch(e){ return false; } }
+function gsNoticeSeen(){ try{ return localStorage.getItem("gs_notice_seen") === "1"; }catch(e){ return false; } }
 function gsCanTalk(s){
   if(gsVariant() === "B") return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   return !!s.recognition;
@@ -31651,6 +31652,7 @@ function gsResetListenButtons(){
 function gsStopSpeech(){
   const s = graceSpeak;
   if(s){ s.speakToken = (s.speakToken || 0) + 1; s.speaking = false; }
+  if(s && s.ttsSrc){ try{ s.ttsSrc.onended = null; s.ttsSrc.stop(); }catch(e){} s.ttsSrc = null; }
   gsReleaseAudio();
   if(window.speechSynthesis) window.speechSynthesis.cancel();
   gsResetListenButtons();
@@ -31734,6 +31736,56 @@ async function gsSpeakKokoro(text, tok, done){
     gsSpeakBrowser(text, tok, done);
   }
 }
+/* Grace's voice from Google's voice model, through the Worker. If that fails, the phone's voice is used. */
+function gsTtsAllowed(){
+  try{ if(localStorage.getItem("gs_no_google") === "1") return false; }catch(e){}
+  return gsVariant() === "A" && gsNoticeAccepted();
+}
+async function gsSpeakGoogle(text, tok, done){
+  const s = graceSpeak;
+  let data = null;
+  try{
+    const res = await gsWithTimeout(fetch(GRACE_WORKER_URL + "/tts", {
+      method: "POST",
+      headers: {"Content-Type":"application/json", "X-App-Key": gsGetCode()},
+      body: JSON.stringify({text})
+    }), 20000);
+    data = await res.json();
+    if(!res.ok || !data.audio) data = null;
+  }catch(err){ data = null; }
+  if(s && tok !== s.speakToken) return;
+  const ctx = gsCtxGet();
+  if(!data || !ctx){ gsSpeakBrowser(text, tok, done); return; }
+  const m = /rate=(\d+)/.exec(data.mimeType || "");
+  let rate = m ? parseInt(m[1], 10) : 24000;
+  let u8 = gsB64Decode(data.audio);
+  // Some replies arrive wrapped in a WAV file. Read its rate and skip its header, so no click is played.
+  if(u8.length > 44 && u8[0] === 0x52 && u8[1] === 0x49 && u8[2] === 0x46 && u8[3] === 0x46){
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    rate = dv.getUint32(24, true);
+    let off = 12;
+    while(off + 8 <= u8.length){
+      const id = String.fromCharCode(u8[off], u8[off + 1], u8[off + 2], u8[off + 3]);
+      if(id === "data"){ off += 8; break; }
+      off += 8 + dv.getUint32(off + 4, true);
+    }
+    u8 = u8.subarray(off);
+  }
+  const n = u8.length >> 1;
+  const i16 = new Int16Array(n);
+  for(let i = 0; i < n; i++) i16[i] = u8[2 * i] | (u8[2 * i + 1] << 8);
+  const buf = ctx.createBuffer(1, n, rate);
+  const ch = buf.getChannelData(0);
+  for(let i = 0; i < n; i++) ch[i] = i16[i] / 32768;
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.connect(ctx.destination);
+  let finished = false;
+  const finish = ()=>{ if(finished) return; finished = true; if(s && s.ttsSrc === src) s.ttsSrc = null; done(); };
+  src.onended = finish;
+  if(s) s.ttsSrc = src;
+  if(s && s.turnStart){ const w = performance.now() - s.turnStart; s.turnStart = 0; gsReport({variant:"A", kind:"wait", waitMs: Math.round(w)}); }
+  try{ src.start(); }catch(e){ finish(); }
+}
 function gsSpeakBrowser(text, tok, done){
   if(!window.speechSynthesis){ done(); return; }
   const u = new SpeechSynthesisUtterance(text);
@@ -31768,7 +31820,8 @@ function gsSpeak(text, btn, after){
     gsRefreshControls();
     if(after) after();
   };
-  if(GS_USE_KOKORO && !gsKokoroFailed) gsSpeakKokoro(text, tok, done);
+  if(gsTtsAllowed()) gsSpeakGoogle(text, tok, done);
+  else if(GS_USE_KOKORO && !gsKokoroFailed) gsSpeakKokoro(text, tok, done);
   else gsSpeakBrowser(text, tok, done);
 }
 
@@ -31823,7 +31876,7 @@ function gsTalkTap(){
 function gsCallOn(s){
   if(!s || s.call) return;
   if(!gsGetCode()){ s.pendingTalk = true; gsRenderCodeBox(); return; }
-  if(gsVariant() === "B" && !gsNoticeAccepted()){ s.showNotice = true; gsRenderNotice(); return; }
+  if(!gsNoticeSeen()){ s.showNotice = true; gsRenderNotice(); return; }
   s.showNotice = false; gsRenderNotice();
   if(!gsCanTalk(s)){ s.errorText = t().speakNoMic; gsRefreshControls(); return; }
   gsCtxGet(); gsUnlockAudio(); gsStopSpeech(); // inside the tap, so iPhone allows sound
@@ -32076,11 +32129,11 @@ function gsRenderNotice(){
     </div>
   </div>`;
   document.getElementById("gsNoticeYes").addEventListener("click", ()=>{
-    try{ localStorage.setItem("gs_live_ok", "1"); }catch(e){}
+    try{ localStorage.setItem("gs_live_ok", "1"); localStorage.setItem("gs_notice_seen", "1"); }catch(e){}
     s.showNotice = false; gsRenderNotice(); gsTalkTap();
   });
   document.getElementById("gsNoticeNo").addEventListener("click", ()=>{
-    try{ localStorage.setItem("gs_ab_pick", "A"); }catch(e){}
+    try{ localStorage.setItem("gs_ab_pick", "A"); localStorage.setItem("gs_no_google", "1"); localStorage.setItem("gs_notice_seen", "1"); }catch(e){}
     s.showNotice = false; gsRenderNotice(); s.controlsKey = null; gsRefreshControls();
   });
 }
