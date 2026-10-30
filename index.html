@@ -254,6 +254,15 @@ body.dari-mode .streak-strip-title{ font-family: var(--dari); }
 .gs-mute:active, .gs-hangup:active{ transform:translateY(4px); }
 
 .gs-status{ text-align:center; font-size:0.84rem; color:var(--ink-soft); min-height:1.2em; }
+.gs-notice{ background:#fff8e6; border:1px solid #f0d78a; border-radius:14px; padding:12px 14px; margin:6px 0 10px; font-size:0.92rem; }
+.gs-notice-title{ font-weight:700; margin-bottom:4px; }
+.gs-notice-body{ color:var(--ink-soft); line-height:1.5; }
+.gs-notice-btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.gs-notice-btns button{ font:inherit; padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+.gs-notice-btns .gs-notice-yes{ background:var(--indigo); color:#fff; border-color:var(--indigo); }
+.gs-rate{ display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; font-size:0.9rem; color:var(--ink-soft); margin:6px 0; }
+.gs-rate button{ font:inherit; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+.gs-rate-thanks{ text-align:center; font-size:0.9rem; color:var(--ink-soft); margin:6px 0; }
 .gs-typeform{ display:flex; gap:8px; }
 .gs-typeform input{ flex:1; min-width:0; padding:10px 14px; border-radius:999px; border:1.5px solid var(--line); font:inherit; color:var(--ink); background:#fff; }
 .gs-typeform button{ padding:0 18px; border-radius:999px; border:none; background:var(--sage); color:#fff; font-weight:600; cursor:pointer; }
@@ -768,7 +777,7 @@ const UI = {
     speakStatusPtt:"Tap the mic, say your reply, then tap again.",
     speakKicker:"Speaking practice",
     speakTitle:"Talk with Grace",
-    speakIntro:"Tap the mic, speak, and Grace answers when you stop. You can also type below. Practice only — it doesn't affect your rewards.",
+    speakIntro:"Grace starts listening as soon as you open this page. Speak, and Grace answers when you stop. Tap End to finish, and Talk to start again. You can also type below. Practice only — it doesn't affect your rewards.",
     speakGraceName:"Grace",
     speakMicStart:"Tap to speak",
     speakMicListening:"Listening… go ahead.",
@@ -792,7 +801,18 @@ const UI = {
     speakMuteBtn:"Mute",
     speakUnmuteBtn:"Unmute",
     speakEndBtn:"End talk",
-    speakStatusIdle:"Tap the mic and speak. Grace answers when you stop.",
+    speakStatusIdle:"Tap Talk to start again.",
+    speakBtnTalk:"Talk",
+    speakBtnEnd:"End",
+    speakNoticeTitle:"Before you talk to Grace",
+    speakNoticeBody:"This is a test of a new voice. Your voice is sent to Google, and Google may keep it and use it to improve its products. Please don't say your name, your address or other private details. You can also use the usual version instead.",
+    speakNoticeYes:"Continue",
+    speakNoticeNo:"Use the usual version",
+    speakErrLiveCap:"The test is full for today. Please try again tomorrow.",
+    speakRateQ:"Was Grace's answer helpful?",
+    speakRateGood:"Yes",
+    speakRateBad:"No",
+    speakRateThanks:"Thank you!",
     speakStatusCall:"Connected. Go ahead, whenever you're ready.",
     speakStatusMuted:"Muted. Tap Unmute to speak.",
     speakStatusSpeaking:"Grace is speaking…",
@@ -878,7 +898,7 @@ const UI = {
     speakStatusPtt:"ضربه بزنید، پاسخ خود را بگویید، سپس دوباره ضربه بزنید.",
     speakKicker:"تمرین صحبت کردن",
     speakTitle:"صحبت با گریس",
-    speakIntro:"روی میکروفون بزنید و صحبت کنید. وقتی ساکت شوید، گریس پاسخ می‌دهد. می‌توانید پایین صفحه هم بنویسید. این فقط تمرین است و روی پاداش‌ها اثری ندارد.",
+    speakIntro:"به محض باز کردن این صفحه، گریس گوش می‌دهد. صحبت کنید؛ وقتی ساکت شوید گریس پاسخ می‌دهد. برای پایان دادن «پایان» و برای شروع دوباره «صحبت» را بزنید. می‌توانید پایین صفحه هم بنویسید. این فقط تمرین است و روی پاداش‌ها اثری ندارد.",
     speakGraceName:"گریس",
     speakMicStart:"برای صحبت بزنید",
     speakMicListening:"در حال شنیدن… بفرمایید.",
@@ -902,7 +922,18 @@ const UI = {
     speakMuteBtn:"بی‌صدا",
     speakUnmuteBtn:"صدادار",
     speakEndBtn:"پایان گفتگو",
-    speakStatusIdle:"روی میکروفون بزنید و صحبت کنید. وقتی ساکت شوید، گریس پاسخ می‌دهد.",
+    speakStatusIdle:"برای شروع دوباره «صحبت» را بزنید.",
+    speakBtnTalk:"صحبت",
+    speakBtnEnd:"پایان",
+    speakNoticeTitle:"پیش از صحبت با گریس",
+    speakNoticeBody:"این یک آزمایش صدای جدید است. صدای شما به گوگل فرستاده می‌شود و گوگل ممکن است آن را نگه دارد و برای بهتر کردن محصولاتش استفاده کند. لطفاً نام، آدرس یا اطلاعات خصوصی خود را نگویید. می‌توانید از نسخهٔ معمولی هم استفاده کنید.",
+    speakNoticeYes:"ادامه",
+    speakNoticeNo:"استفاده از نسخهٔ معمولی",
+    speakErrLiveCap:"آزمایش امروز پر شده است. لطفاً فردا دوباره امتحان کنید.",
+    speakRateQ:"آیا پاسخ گریس مفید بود؟",
+    speakRateGood:"بله",
+    speakRateBad:"نه",
+    speakRateThanks:"سپاس!",
     speakStatusCall:"متصل شدید. هر وقت آماده بودید صحبت کنید.",
     speakStatusMuted:"بی‌صدا. برای صحبت «صدادار» را بزنید.",
     speakStatusSpeaking:"گریس در حال صحبت است…",
@@ -31499,6 +31530,40 @@ const GS_KOKORO_MODEL = "onnx-community/Kokoro-82M-v1.0-ONNX";
 const GS_KOKORO_VOICE = "af_heart";
 let graceSpeak = null; // one conversation at a time; see renderSpeakGrace()
 let gsKokoroTTS = null, gsKokoroPromise = null, gsKokoroFailed = false, gsAudio = null, gsAudioEl = null;
+/* ---- Test split (A/B). Each class code gets one version: "A" = the usual voice (Claude),
+   "B" = Gemini Live. A student can switch to "A" on this device after the notice. ---- */
+let gsAutoStart = false; // set by the hub's Talk button: the call starts as soon as the page opens
+let gsCtx = null; // one audio context, started by a tap (iPhone needs that)
+function gsCtxGet(){
+  if(!gsCtx){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null; gsCtx = new AC(); }
+  if(gsCtx.state === "suspended") gsCtx.resume().catch(()=>{});
+  return gsCtx;
+}
+function gsHash(str){
+  let h = 2166136261;
+  for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function gsVariant(){
+  let pick = ""; try{ pick = localStorage.getItem("gs_ab_pick") || ""; }catch(e){}
+  if(pick === "A" || pick === "B") return pick;
+  const code = gsGetCode(); if(!code) return "A";
+  return gsHash(code) % 2 === 0 ? "A" : "B";
+}
+function gsNoticeAccepted(){ try{ return localStorage.getItem("gs_live_ok") === "1"; }catch(e){ return false; } }
+function gsCanTalk(s){
+  if(gsVariant() === "B") return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  return !!s.recognition;
+}
+// Anonymous counts only (variant, kind, timing or thumbs). No names, text or audio.
+function gsReport(body){
+  const code = gsGetCode(); if(!code) return;
+  fetch(GRACE_WORKER_URL + "/event", {
+    method: "POST",
+    headers: {"Content-Type":"application/json", "X-App-Key": code},
+    body: JSON.stringify(body)
+  }).catch(()=>{});
+}
 
 function gsEsc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -31549,27 +31614,25 @@ function gsMicIcon(){
 function gsRefreshControls(){
   const s = graceSpeak; if(!s) return;
   const L = t();
-  const key = [s.listening, s.busy, !!s.recognition].join("|");
+  const canTalk = gsCanTalk(s);
+  const key = [s.call, canTalk].join("|");
   const wrap = document.getElementById("gsControls");
   if(wrap && s.controlsKey !== key){
     s.controlsKey = key;
     wrap.innerHTML = `<div class="gs-call">
-      <div class="gs-mic3d-stack">
-        <span class="gs-talk3d-label">${s.listening ? L.speakMicListening : L.speakTalkAgain}</span>
-        <button class="gs-mic3d${s.listening ? " on" : ""}" id="gsStartBtn" type="button" aria-pressed="${s.listening ? "true" : "false"}"${s.recognition && !s.busy ? "" : " disabled"}>${gsMicIcon()}</button>
-      </div>
+      <button class="gs-mic3d${s.call ? " on" : ""}" id="gsStartBtn" type="button" aria-pressed="${s.call ? "true" : "false"}"${canTalk ? "" : " disabled"}>${s.call ? L.speakBtnEnd : L.speakBtnTalk}</button>
     </div>`;
     document.getElementById("gsStartBtn").addEventListener("click", gsTalkTap);
   }
   const status = document.getElementById("gsStatus");
   if(status){
     let text;
-    if(!s.recognition) text = L.speakNoMic;
+    if(!canTalk) text = L.speakNoMic;
     else if(s.errorText) text = s.errorText;
-    else if(s.busy) text = L.speakThinking;
+    else if(!s.call) text = L.speakStatusIdle;
     else if(s.speaking) text = L.speakStatusSpeaking;
-    else if(s.listening) text = L.speakMicListening;
-    else text = L.speakStatusIdle;
+    else if(s.busy) text = L.speakThinking;
+    else text = L.speakMicListening;
     status.textContent = text;
   }
   const tr = document.getElementById("gsTranscript");
@@ -31679,10 +31742,15 @@ function gsSpeakBrowser(text, tok, done){
   // Safety net: some browsers never fire onend, so finish after a generous guess.
   const timer = setTimeout(done, 3000 + text.length * 120);
   const finish = ()=>{ clearTimeout(timer); done(); };
+  u.onstart = ()=>{
+    // Time from the student stopping to Grace's first sound (for the test).
+    const s2 = graceSpeak;
+    if(s2 && s2.turnStart){ const w = performance.now() - s2.turnStart; s2.turnStart = 0; gsReport({variant:"A", kind:"wait", waitMs: Math.round(w)}); }
+  };
   u.onend = finish; u.onerror = finish;
   window.speechSynthesis.speak(u);
 }
-function gsSpeak(text, btn){
+function gsSpeak(text, btn, after){
   const s = graceSpeak; const L = t();
   if(btn && btn.classList.contains("speaking")){ gsStopSpeech(); gsRefreshControls(); return; }
   gsStopSpeech();
@@ -31698,6 +31766,7 @@ function gsSpeak(text, btn){
     if(s) s.speaking = false;
     if(btn){ btn.classList.remove("speaking"); btn.textContent = L.speakListen; }
     gsRefreshControls();
+    if(after) after();
   };
   if(GS_USE_KOKORO && !gsKokoroFailed) gsSpeakKokoro(text, tok, done);
   else gsSpeakBrowser(text, tok, done);
@@ -31720,40 +31789,316 @@ function gsSetupMic(s){
     gsRefreshControls();
   };
   rec.onend = ()=>{
-    // The browser ends listening by itself when the student pauses; send what was heard.
+    // The browser stops listening after a pause. What was heard is sent to Grace, and once
+    // Grace has answered, listening starts again by itself while the call is on.
     s.listening = false;
     const text = (s.finalText || s.transcript || "").trim();
     s.finalText = ""; s.transcript = "";
+    if(s.discard){ gsRefreshControls(); return; }
+    if(text){
+      s.idleRounds = 0;
+      s.turnStart = performance.now();
+      gsRefreshControls();
+      gsSend(text, true);
+      return;
+    }
+    s.idleRounds = (s.idleRounds || 0) + 1;
+    if(s.idleRounds > 12){ gsCallOff(s); s.errorText = t().speakMicMissed; gsRefreshControls(); return; }
     gsRefreshControls();
-    if(text && !s.discard) gsSend(text, true);
+    if(s.call) setTimeout(()=> gsListenA(s), 250);
   };
   rec.onerror = (e)=>{
     s.listening = false;
-    if(e.error === "not-allowed" || e.error === "service-not-allowed") s.errorText = t().speakMicBlocked;
-    else if(e.error === "no-speech") s.errorText = t().speakMicMissed;
+    if(e.error === "not-allowed" || e.error === "service-not-allowed"){ gsCallOff(s); s.errorText = t().speakMicBlocked; }
+    else if(e.error !== "no-speech" && e.error !== "aborted"){ s.errorText = t().speakMicMissed; }
     gsRefreshControls();
   };
   s.recognition = rec;
-}
-// The mic: a tap starts listening; another tap ends it early and sends what was said.
+}// The mic: a tap starts listening; another tap ends it early and sends what was said.
 function gsTalkTap(){
-  const s = graceSpeak; if(!s || !s.recognition || s.busy) return;
-  if(s.listening){ try{ s.recognition.stop(); }catch(e){} return; }
+  const s = graceSpeak; if(!s) return;
+  if(s.call) gsCallOff(s); else gsCallOn(s);
+}
+// Start of a call: Talk, or the page opening from the hub. Nothing else is needed from the student.
+function gsCallOn(s){
+  if(!s || s.call) return;
   if(!gsGetCode()){ s.pendingTalk = true; gsRenderCodeBox(); return; }
-  gsUnlockAudio();
-  gsStopSpeech(); // tapping while Grace is talking stops her
-  s.errorText = "";
-  s.discard = false;
-  s.finalText = ""; s.transcript = "";
-  try{ s.recognition.start(); s.listening = true; }
-  catch(e){ s.listening = false; s.errorText = t().speakMicMissed; }
+  if(gsVariant() === "B" && !gsNoticeAccepted()){ s.showNotice = true; gsRenderNotice(); return; }
+  s.showNotice = false; gsRenderNotice();
+  if(!gsCanTalk(s)){ s.errorText = t().speakNoMic; gsRefreshControls(); return; }
+  gsCtxGet(); gsUnlockAudio(); gsStopSpeech(); // inside the tap, so iPhone allows sound
+  s.call = true; s.errorText = ""; s.idleRounds = 0;
+  s.rateOpen = null; gsRenderRate();
+  s.controlsKey = null;
+  if(gsVariant() === "B") gsLiveStart(s);
+  else { s.discard = false; gsListenA(s); }
   gsRefreshControls();
 }
+// End of a call: nothing listens, nothing speaks, nothing restarts. The button shows Talk again.
+function gsCallOff(s){
+  if(!s) return;
+  s.call = false; s.discard = true;
+  if(s.listening && s.recognition){ try{ s.recognition.stop(); }catch(e){} }
+  s.listening = false;
+  if(s.live) gsLiveStop(s);
+  gsStopSpeech();
+  s.busy = false; s.speaking = false;
+  s.controlsKey = null;
+  gsRefreshControls();
+}
+function gsListenA(s){
+  if(!s || !s.call || !s.recognition || s.busy || s.speaking || s.listening) return;
+  s.discard = false; s.errorText = ""; s.transcript = ""; s.finalText = "";
+  try{ s.recognition.start(); s.listening = true; }
+  catch(e){ /* already listening */ }
+  gsRefreshControls();
+}
+function gsResumeA(s){ if(s && s.call && !s.busy && !s.speaking) gsListenA(s); }
 // Called by navTo() whenever the student leaves the screen: nothing keeps listening.
 function graceStopAll(){
   const s = graceSpeak;
-  if(s && s.listening){ s.discard = true; try{ s.recognition.stop(); }catch(e){} s.listening = false; }
-  gsStopSpeech();
+  if(s) gsCallOff(s); else gsStopSpeech();
+}
+/* ---- Gemini Live (version B of the test). One spoken turn per tap: tap, speak, Grace
+   answers. The phone gets a short-lived token from the Worker; the Google key never reaches
+   the phone. Replies are read by Gemini's own voice. ---- */
+function gsDownTo16k(f32, inRate){
+  const ratio = inRate / 16000;
+  const n = Math.floor(f32.length / ratio);
+  const out = new Int16Array(n);
+  for(let i = 0; i < n; i++){
+    const a = Math.floor(i * ratio), b = Math.min(f32.length, Math.floor((i + 1) * ratio));
+    let sum = 0; for(let j = a; j < b; j++) sum += f32[j];
+    const x = b > a ? sum / (b - a) : 0;
+    out[i] = Math.max(-32768, Math.min(32767, Math.round(x < 0 ? x * 32768 : x * 32767)));
+  }
+  return out;
+}
+function gsB64Encode(i16){
+  const u8 = new Uint8Array(i16.buffer, i16.byteOffset, i16.byteLength);
+  let bin = "";
+  for(let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function gsB64Decode(b64){
+  const bin = atob(b64);
+  const u8 = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+function gsLiveErrorText(err){
+  const L = t();
+  if(err && err.code === "live_cap_reached") return L.speakErrLiveCap;
+  if(err && err.code === "unauthorized") return L.speakErrCode;
+  if(err && err.code === "origin_not_allowed") return L.speakErrDenied;
+  return L.speakErrNetwork;
+}
+async function gsLiveStart(s){
+  const L = t();
+  const code = gsGetCode();
+  const unit = findUnit(s.unitId).unit;
+  const live = {
+    phase: "connecting", ws: null, stream: null, src: null, proc: null, mute: null,
+    nextAt: 0, playing: [], lastVoiceAt: 0, firstAudioAt: 0, heard: "", said: "",
+    closed: false, guard: null
+  };
+  s.live = live; s.busy = true; s.listening = false; s.speaking = false; s.transcript = "";
+  s.controlsKey = null; gsRefreshControls();
+  live.guard = setTimeout(()=>{ if(live.phase === "connecting") gsLiveFail(s, live, L.speakMicMissed); }, 20000);
+
+  let tok;
+  try{
+    const res = await fetch(GRACE_WORKER_URL + "/live-token", {
+      method: "POST",
+      headers: {"Content-Type":"application/json", "X-App-Key": code},
+      body: JSON.stringify({unit: gsUnitPayload(unit)})
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.token){ const err = new Error("live token"); err.code = data.error || ("http_" + res.status); throw err; }
+    tok = data;
+  }catch(err){
+    gsLiveFail(s, live, gsLiveErrorText(err), err && err.code);
+    return;
+  }
+  if(live.closed) return;
+
+  let stream;
+  try{ stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true}}); }
+  catch(err){ gsLiveFail(s, live, L.speakMicBlocked); return; }
+  if(live.closed){ stream.getTracks().forEach(x=>x.stop()); return; }
+  live.stream = stream;
+
+  const url = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" + encodeURIComponent(tok.token);
+  let ws;
+  try{ ws = new WebSocket(url); }
+  catch(err){ gsLiveFail(s, live, L.speakErrNetwork); return; }
+  live.ws = ws;
+  ws.onopen = ()=>{
+    ws.send(JSON.stringify({ setup: {
+      model: "models/" + (tok.model || "gemini-3.8-live"),
+      generationConfig: { responseModalities: ["AUDIO"] },
+      systemInstruction: { parts: [{ text: tok.systemInstruction || "" }] },
+      inputAudioTranscription: {},
+      outputAudioTranscription: {}
+    }}));
+  };
+  ws.onmessage = async (ev)=>{
+    if(live.closed) return;
+    let msg;
+    try{ msg = JSON.parse(typeof ev.data === "string" ? ev.data : await ev.data.text()); }catch(e){ return; }
+    if(msg.setupComplete){ gsLiveReady(s, live); return; }
+    const sc = msg.serverContent; if(!sc) return;
+    if(sc.interrupted){ gsLivePlayStop(live); live.phase = "listening"; }
+    if(sc.inputTranscription && sc.inputTranscription.text) live.heard += sc.inputTranscription.text;
+    if(sc.outputTranscription && sc.outputTranscription.text) live.said += sc.outputTranscription.text;
+    const parts = (sc.modelTurn && sc.modelTurn.parts) || [];
+    parts.forEach(p=>{ if(p.inlineData && p.inlineData.data) gsLivePlayChunk(s, live, p.inlineData); });
+    if(sc.turnComplete) gsLiveTurnDone(s, live);
+  };
+  ws.onerror = ()=> gsLiveFail(s, live, L.speakErrNetwork);
+  ws.onclose = ()=> gsLiveFail(s, live, L.speakErrNetwork);
+}function gsLiveReady(s, live){
+  if(live.closed) return;
+  if(live.guard){ clearTimeout(live.guard); live.guard = null; }
+  s.busy = false; s.controlsKey = null; gsRefreshControls();
+  // Earlier turns of this conversation give Grace the context. Typed turns count too.
+  let hist = s.messages.slice(-12).map(m=>({ role: m.role === "assistant" ? "model" : "user", parts: [{text: m.content}] }));
+  if(hist.length && hist[0].role !== "user") hist = [{role:"user", parts:[{text:"Let's begin."}]}].concat(hist);
+  if(hist.length) live.ws.send(JSON.stringify({clientContent:{turns: hist, turnComplete: false}}));
+  gsLiveStartMic(s, live);
+}function gsLiveStartMic(s, live){
+  const ctx = gsCtxGet();
+  if(!ctx || !live.stream){ gsLiveFail(s, live, t().speakMicBlocked); return; }
+  const src = ctx.createMediaStreamSource(live.stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  const mute = ctx.createGain(); mute.gain.value = 0;
+  proc.onaudioprocess = (e)=>{
+    if(live.phase !== "listening" || live.closed || !live.ws || live.ws.readyState !== 1) return;
+    const f = e.inputBuffer.getChannelData(0);
+    let sum = 0; for(let i = 0; i < f.length; i++) sum += f[i] * f[i];
+    if(Math.sqrt(sum / f.length) > 0.015) live.lastVoiceAt = performance.now();
+    live.ws.send(JSON.stringify({realtimeInput:{audio:{data: gsB64Encode(gsDownTo16k(f, ctx.sampleRate)), mimeType:"audio/pcm;rate=16000"}}}));
+  };
+  src.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+  live.src = src; live.proc = proc; live.mute = mute;
+  live.phase = "listening";
+  s.listening = true;
+  s.controlsKey = null; gsRefreshControls();
+}
+// The student tapped again: stop the mic and tell Gemini the turn is over.
+function gsLiveStopMic(live){
+  if(live.proc){ live.proc.onaudioprocess = null; try{ live.proc.disconnect(); }catch(e){} }
+  if(live.src){ try{ live.src.disconnect(); }catch(e){} }
+  if(live.mute){ try{ live.mute.disconnect(); }catch(e){} }
+  if(live.stream){ live.stream.getTracks().forEach(x=>{ try{ x.stop(); }catch(e){} }); }
+  live.proc = live.src = live.mute = live.stream = null;
+}
+function gsLivePlayChunk(s, live, inline){
+  const ctx = gsCtxGet(); if(!ctx) return;
+  const m = /rate=(\d+)/.exec(inline.mimeType || "");
+  const rate = m ? parseInt(m[1], 10) : 24000;
+  const u8 = gsB64Decode(inline.data);
+  const n = u8.length >> 1;
+  const i16 = new Int16Array(n);
+  for(let i = 0; i < n; i++) i16[i] = u8[2 * i] | (u8[2 * i + 1] << 8); // little-endian samples
+  const buf = ctx.createBuffer(1, n, rate);
+  const ch = buf.getChannelData(0);
+  for(let i = 0; i < n; i++) ch[i] = i16[i] / 32768;
+  const src = ctx.createBufferSource();
+  src.buffer = buf; src.connect(ctx.destination);
+  const now = ctx.currentTime;
+  if(live.nextAt < now + 0.02) live.nextAt = now + 0.05;
+  src.start(live.nextAt);
+  live.nextAt += buf.duration;
+  live.playing.push(src);
+  src.onended = ()=>{
+    live.playing = live.playing.filter(x=>x!==src);
+    // The student's microphone is not sent while Grace is speaking, so her voice is not heard back.
+    if(!live.playing.length && !live.closed){ live.phase = "listening"; s.speaking = false; s.controlsKey = null; gsRefreshControls(); }
+  };
+  live.phase = "speaking";
+  if(!live.firstAudioAt){
+    live.firstAudioAt = performance.now();
+    gsReport({variant:"B", kind:"turn"});
+    if(live.lastVoiceAt) gsReport({variant:"B", kind:"wait", waitMs: Math.round(live.firstAudioAt - live.lastVoiceAt)});
+  }
+  s.speaking = true;
+  s.controlsKey = null; gsRefreshControls();
+}function gsLiveTurnDone(s, live){
+  const heard = live.heard.trim(), said = live.said.trim();
+  live.heard = ""; live.said = ""; live.firstAudioAt = 0;
+  if(heard){ s.log.push({kind:"you", text: heard}); s.messages.push({role:"user", content: heard}); }
+  if(said){ s.log.push({kind:"grace", text: said}); s.messages.push({role:"assistant", content: said}); gsOfferRating("B"); }
+  gsRenderLog();
+  s.controlsKey = null; gsRefreshControls();
+}
+function gsLivePlayStop(live){
+  live.playing.forEach(src=>{ src.onended = null; try{ src.stop(); }catch(e){} });
+  live.playing = []; live.nextAt = 0;
+}
+function gsLiveTeardown(live){
+  live.closed = true;
+  if(live.guard){ clearTimeout(live.guard); live.guard = null; }
+  if(live.ws){
+    live.ws.onmessage = null; live.ws.onerror = null; live.ws.onclose = null;
+    try{ live.ws.close(); }catch(e){}
+    live.ws = null;
+  }
+  gsLiveStopMic(live);
+  gsLivePlayStop(live);
+}
+function gsLiveStop(s){
+  const live = s.live; if(!live) return;
+  gsLiveTeardown(live);
+  s.live = null; s.busy = false; s.listening = false; s.speaking = false;
+  s.controlsKey = null; gsRefreshControls();
+}
+function gsLiveFail(s, live, msg, code){
+  if(live.closed) return;
+  gsLiveTeardown(live);
+  if(s.live === live) s.live = null;
+  s.call = false; s.busy = false; s.listening = false; s.speaking = false;
+  if(code === "unauthorized"){ gsSetCode(""); s.errorText = gsLiveErrorText({code}); gsRenderCodeBox(); }
+  else s.errorText = msg;
+  s.controlsKey = null; gsRefreshControls();
+}
+/* ---- Notice (shown once per device before the first Gemini turn) and thumbs ---- */
+function gsRenderNotice(){
+  const el = document.getElementById("gsNoticeBox"); if(!el) return;
+  const s = graceSpeak; const L = t();
+  if(!s || !s.showNotice){ el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="gs-notice">
+    <div class="gs-notice-title">${L.speakNoticeTitle}</div>
+    <div class="gs-notice-body">${L.speakNoticeBody}</div>
+    <div class="gs-notice-btns">
+      <button type="button" class="gs-notice-yes" id="gsNoticeYes">${L.speakNoticeYes}</button>
+      <button type="button" id="gsNoticeNo">${L.speakNoticeNo}</button>
+    </div>
+  </div>`;
+  document.getElementById("gsNoticeYes").addEventListener("click", ()=>{
+    try{ localStorage.setItem("gs_live_ok", "1"); }catch(e){}
+    s.showNotice = false; gsRenderNotice(); gsTalkTap();
+  });
+  document.getElementById("gsNoticeNo").addEventListener("click", ()=>{
+    try{ localStorage.setItem("gs_ab_pick", "A"); }catch(e){}
+    s.showNotice = false; gsRenderNotice(); s.controlsKey = null; gsRefreshControls();
+  });
+}
+function gsRenderRate(){
+  const el = document.getElementById("gsRate"); if(!el) return;
+  const s = graceSpeak; const L = t();
+  if(!s || !s.rateOpen){ el.innerHTML = ""; return; }
+  el.innerHTML = `<div class="gs-rate"><span>${L.speakRateQ}</span><button type="button" data-r="up">${L.speakRateGood}</button><button type="button" data-r="down">${L.speakRateBad}</button></div>`;
+  el.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    const variant = s.rateOpen; if(!variant) return;
+    s.rateOpen = null;
+    gsReport({variant, kind:"rating", rating: b.dataset.r});
+    el.innerHTML = `<div class="gs-rate-thanks">${L.speakRateThanks}</div>`;
+  }));
+}
+function gsOfferRating(variant){
+  const s = graceSpeak; if(!s) return;
+  s.rateOpen = variant; gsRenderRate();
 }
 
 /* ---- Class code ---- */
@@ -31777,7 +32122,7 @@ function gsRenderCodeBox(){
     gsSetCode(code);
     gsRenderCodeBox();
     const s = graceSpeak; if(!s) return;
-    if(s.pendingTalk){ s.pendingTalk = false; gsTalkTap(); return; }
+    if(s.pendingTalk){ s.pendingTalk = false; gsCallOn(s); return; }
     if(s.pendingText){ const p = s.pendingText; const v = s.pendingVoice; s.pendingText = null; gsSend(p, v); }
   });
   const input = document.getElementById("gsCodeInput");
@@ -31816,6 +32161,7 @@ function gsSend(text, voice){
   if(!code){ s.pendingText = text; s.pendingVoice = !!voice; gsRenderCodeBox(); return; }
   const unit = findUnit(s.unitId).unit;
   s.busy = true;
+  s.rateOpen = null; gsRenderRate();
   s.log.push({kind:"you", text});
   s.messages.push({role:"user", content:text});
   s.log.push({kind:"note", text:L.speakThinking});
@@ -31840,17 +32186,20 @@ function gsSend(text, voice){
     s.messages.push({role:"assistant", content:reply});
     s.log.push({kind:"grace", text:reply});
     gsRenderLog();
-    if(voice){
+    if(voice && s.call){
       const btns = document.querySelectorAll(".gs-listen");
-      gsSpeak(reply, btns[btns.length - 1] || null);
+      gsReport({variant:"A", kind:"turn"});
+      gsSpeak(reply, btns[btns.length - 1] || null, ()=>{ gsOfferRating("A"); gsResumeA(s); });
     }
   })
   .catch(err=>{
     s.log = s.log.filter(m=>!(m.kind === "note" && m.text === L.speakThinking));
     s.messages.pop();
+    s.turnStart = 0;
     if(err && err.code === "unauthorized"){
       // The stored class code is wrong or has been changed: forget it and ask again.
       gsSetCode("");
+      s.call = false;
       s.pendingText = null; s.pendingTalk = false;
       s.errorText = L.speakErrCode;
       gsRenderLog(); gsRenderCodeBox(); gsRefreshControls();
@@ -31862,6 +32211,7 @@ function gsSend(text, voice){
   .finally(()=>{
     s.busy = false;
     gsRefreshControls();
+    if(voice) gsResumeA(s); // only if Grace is not speaking; otherwise her speech ends the round
   });
 }
 
@@ -31875,6 +32225,7 @@ function gsHubButtonHtml(unitId, L){
   </div>`;
 }
 function gsHubTalk(unitId){
+  gsAutoStart = true;
   navTo({name:"speak", unitId});
 }
 
@@ -31890,7 +32241,8 @@ function renderSpeakGrace(main, unitId){
       messages: [{role:"assistant", content: GRACE_OPENING_EN}],
       busy: false, listening: false, speaking: false, speakToken: 0,
       recognition: null, transcript: "", finalText: "", discard: false,
-      pendingText: null, pendingVoice: false, pendingTalk: false, errorText: "", controlsKey: null
+      pendingText: null, pendingVoice: false, pendingTalk: false, errorText: "", controlsKey: null,
+      live: null, showNotice: false, rateOpen: null, turnStart: 0, call: false, idleRounds: 0
     };
   }
   const s = graceSpeak;
@@ -31903,10 +32255,12 @@ function renderSpeakGrace(main, unitId){
     </div>
     <div class="gs-intro">${L.speakIntro}</div>
     <div id="gsCodeBox"></div>
+    <div id="gsNoticeBox"></div>
     <div class="gs-log" id="gsLog"></div>
     <div class="gs-transcript" id="gsTranscript"></div>
     <div id="gsControls"></div>
     <div class="gs-status" id="gsStatus"></div>
+    <div id="gsRate"></div>
     <form class="gs-typeform" id="gsTypeForm">
       <input id="gsTypeInput" type="text" placeholder="${L.speakTypePlaceholder}" autocomplete="off">
       <button type="submit" id="gsSendBtn">${L.speakSend}</button>
@@ -31935,6 +32289,9 @@ function renderSpeakGrace(main, unitId){
   gsRenderLog();
   gsRefreshControls();
   gsRenderVoicePicker();
+  gsRenderNotice();
+  gsRenderRate();
+  if(gsAutoStart){ gsAutoStart = false; gsCallOn(s); }
 }
 
 /* ---------------- Activity router ---------------- */
