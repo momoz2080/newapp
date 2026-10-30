@@ -753,6 +753,7 @@ const UI = {
     reviewBonusMsg:(amt)=> "🔁 +$"+amt+" review bonus!",
     earnedForReview:"Review bonus",
     speakTileName:"Speak with Grace",
+    speakVoiceLoading:"Preparing Grace's voice… (first time only)",
     speakKicker:"Speaking practice",
     speakTitle:"Talk with Grace",
     speakIntro:"Press Let's talk! and just speak. Grace listens, answers, and reads her answers aloud. Mute pauses your microphone, and End talk finishes the call. Practice only — it doesn't affect your rewards.",
@@ -859,6 +860,7 @@ const UI = {
     reviewBonusMsg:(amt)=> "🔁 +$"+amt+" جایزه بازبینی!",
     earnedForReview:"جایزه بازبینی",
     speakTileName:"صحبت با گریس",
+    speakVoiceLoading:"در حال آماده‌سازی صدای گریس… (فقط بار اول)",
     speakKicker:"تمرین صحبت کردن",
     speakTitle:"صحبت با گریس",
     speakIntro:"«بیایید صحبت کنیم!» را بزنید و فقط صحبت کنید. گریس می‌شنود، پاسخ می‌دهد و پاسخ‌هایش را با صدا می‌خواند. «بی‌صدا» میکروفون را متوقف می‌کند و «پایان گفتگو» تماس را تمام می‌کند. این فقط تمرین است و روی پاداش‌های شما تأثیری ندارد.",
@@ -31472,6 +31474,11 @@ const GS_VOICE_PREFERRED = ["Google US English", "Samantha", "Ava", "Allison", "
   "Microsoft Aria Online (Natural) - English (United States)",
   "Microsoft Jenny Online (Natural) - English (United States)"];
 let graceSpeak = null; // one conversation at a time; see renderSpeakGrace()
+// Grace's voice: Kokoro, an open voice model that runs in the browser (no per-character cost).
+const GS_KOKORO_URL = "https://cdn.jsdelivr.net/npm/kokoro-js@1.2.0/+esm";
+const GS_KOKORO_MODEL = "onnx-community/Kokoro-82M-v1.0-ONNX";
+const GS_KOKORO_VOICE = "af_heart";
+let gsKokoroTTS = null, gsKokoroPromise = null, gsKokoroFailed = false, gsAudio = null;
 
 function gsEsc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -31579,38 +31586,99 @@ function gsResetListenButtons(){
 function gsStopSpeech(){
   const s = graceSpeak;
   if(s){ s.speakToken = (s.speakToken || 0) + 1; s.speaking = false; }
+  gsReleaseAudio();
   if(window.speechSynthesis) window.speechSynthesis.cancel();
   gsResetListenButtons();
+}
+function gsReleaseAudio(){
+  if(!gsAudio) return;
+  try{ gsAudio.el.pause(); }catch(e){}
+  try{ URL.revokeObjectURL(gsAudio.url); }catch(e){}
+  gsAudio = null;
+}
+/* Loads the Kokoro model once per page visit. The browser caches the download, so
+   later visits start quickly. Any failure switches Grace to the built-in voice. */
+function gsKokoroLoad(){
+  if(!gsKokoroPromise){
+    gsKokoroPromise = import(GS_KOKORO_URL)
+      .then(m => m.KokoroTTS.from_pretrained(GS_KOKORO_MODEL, { dtype: "q8", device: "wasm" }))
+      .then(tts => { gsKokoroTTS = tts; return tts; })
+      .catch(err => { gsKokoroPromise = null; gsKokoroFailed = true; throw err; });
+  }
+  return gsKokoroPromise;
+}
+/* Wraps raw samples (Float32, -1..1) in a WAV file the browser can play. */
+function gsWavBlob(samples, rate){
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const v = new DataView(buf);
+  const str = (o, x) => { for(let i = 0; i < x.length; i++) v.setUint8(o + i, x.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + samples.length * 2, true); str(8, "WAVE");
+  str(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, samples.length * 2, true);
+  for(let i = 0; i < samples.length; i++){
+    const x = Math.max(-1, Math.min(1, samples[i]));
+    v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7FFF, true);
+  }
+  return new Blob([buf], { type: "audio/wav" });
 }
 function gsSpeak(text, btn){
   const s = graceSpeak; const L = t();
   if(btn && btn.classList.contains("speaking")){ gsStopSpeech(); gsResumeListen(); gsRefreshControls(); return; }
   gsStopSpeech();
-  if(!window.speechSynthesis){ gsResumeListen(); return; }
   const tok = s ? s.speakToken : 0;
   if(s) s.speaking = true;
   gsStopListen(); // don't let the microphone hear Grace
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "en-US"; u.rate = 0.95;
-  const v = gsVoice(); if(v) u.voice = v;
+  if(btn){ btn.classList.add("speaking"); btn.textContent = L.speakStop; }
+  gsRefreshControls();
   let finished = false;
-  let timer = null;
   const done = ()=>{
     if(finished) return;
     if(s && tok !== s.speakToken) return;
     finished = true;
-    clearTimeout(timer);
     if(s) s.speaking = false;
     if(btn){ btn.classList.remove("speaking"); btn.textContent = L.speakListen; }
     gsResumeListen();
     gsRefreshControls();
   };
-  // Safety net: some browsers never fire onend, so resume after a generous guess.
-  timer = setTimeout(done, 3000 + text.length * 120);
-  u.onend = done; u.onerror = done;
-  if(btn){ btn.classList.add("speaking"); btn.textContent = L.speakStop; }
+  if(gsKokoroFailed) gsSpeakBrowser(text, tok, done);
+  else gsSpeakKokoro(text, tok, done);
+}
+async function gsSpeakKokoro(text, tok, done){
+  const s = graceSpeak;
+  const statusEl = document.getElementById("gsStatus");
+  try{
+    if(!gsKokoroTTS && statusEl) statusEl.textContent = t().speakVoiceLoading;
+    const tts = await gsKokoroLoad();
+    if(statusEl && statusEl.textContent === t().speakVoiceLoading) statusEl.textContent = "";
+    if(s && tok !== s.speakToken) return;
+    const audio = await tts.generate(text, { voice: GS_KOKORO_VOICE });
+    if(s && tok !== s.speakToken) return;
+    const url = URL.createObjectURL(gsWavBlob(audio.audio, audio.sampling_rate));
+    const el = new Audio(url);
+    gsAudio = { el, url };
+    el.onended = ()=>{ gsReleaseAudio(); done(); };
+    el.onerror = ()=>{ gsReleaseAudio(); done(); };
+    await el.play();
+  }catch(err){
+    if(s && tok !== s.speakToken) return;
+    gsReleaseAudio();
+    // Kokoro couldn't load or play on this device: use the built-in voice from now on.
+    gsKokoroFailed = true;
+    if(statusEl) statusEl.textContent = "";
+    gsSpeakBrowser(text, tok, done);
+  }
+}
+function gsSpeakBrowser(text, tok, done){
+  if(!window.speechSynthesis){ done(); return; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US"; u.rate = 0.95;
+  const v = gsVoice(); if(v) u.voice = v;
+  // Safety net: some browsers never fire onend, so finish after a generous guess.
+  const timer = setTimeout(done, 3000 + text.length * 120);
+  const finish = ()=>{ clearTimeout(timer); done(); };
+  u.onend = finish; u.onerror = finish;
   window.speechSynthesis.speak(u);
-  gsRefreshControls();
 }
 
 /* ---- Listening (the student's voice) ---- */
@@ -31665,6 +31733,7 @@ function gsStartCall(){
   const s = graceSpeak; if(!s || !s.recognition) return;
   if(!gsGetCode()){ s.pendingCall = true; gsRenderCodeBox(); return; }
   s.call = true; s.muted = false; s.ended = false; s.errorText = "";
+  if(!gsKokoroFailed) gsKokoroLoad().catch(()=>{}); // start loading Grace's voice now
   gsRefreshControls();
   gsListen();
 }
