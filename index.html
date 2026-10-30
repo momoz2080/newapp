@@ -193,6 +193,81 @@ body.dari-mode .streak-strip-title{ font-family: var(--dari); }
 .streak-dot.future{ background: var(--line); opacity:0.5; }
 .streak-strip-caption{ font-size:0.78rem; color: var(--ink-soft); line-height:1.4; }
 
+/* ---------------- Spaced review card (Trail) + self-check panel (Writing) ----------------
+   review-card appears on the Trail every REVIEW_INTERVAL completed units, offering an
+   optional mixed-vocab quiz pulled from previously finished units (see renderReviewQuiz()).
+   self-check-* is a lightweight, no-AI checklist shown under the Writing Prompt after
+   saving, so a student can see which target words she used without needing a live model
+   call (the app has no backend to safely hold an API key for that). */
+.review-card{ background:#fff; border: 1.5px solid var(--gold); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; }
+
+/* Speak with Grace (gs-) — a voice call with Grace */
+.gs-screen{ display:flex; flex-direction:column; gap:12px; }
+.gs-intro{ font-size:0.85rem; color:var(--ink-soft); line-height:1.4; }
+.gs-log{ display:flex; flex-direction:column; gap:10px; min-height:120px; }
+.gs-msg{ max-width:84%; padding:10px 13px; border-radius:16px; font-size:0.92rem; line-height:1.45; white-space:pre-wrap; word-wrap:break-word; }
+.gs-msg.grace{ align-self:flex-start; background:#fff; border:1px solid var(--line); }
+.gs-msg.you{ align-self:flex-end; background:var(--indigo); color:#fff; }
+.gs-msg.note{ align-self:center; background:transparent; color:var(--ink-soft); font-size:0.8rem; text-align:center; max-width:95%; }
+.gs-msg.error{ align-self:center; background:#fde2e2; color:#7a1f1f; font-size:0.82rem; text-align:center; max-width:95%; }
+.gs-who{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:0.74rem; color:var(--gold); margin-bottom:3px; }
+.gs-listen{ font-size:0.72rem; color:var(--gold); background:transparent; border:1px solid var(--gold); border-radius:999px; padding:2px 8px; cursor:pointer; }
+.gs-listen.speaking{ background:var(--gold); color:#fff; }
+.gs-transcript{ font-size:0.88rem; color:var(--ink-soft); min-height:1.3em; text-align:center; font-style:italic; }
+
+/* Call controls */
+.gs-call{ display:flex; justify-content:center; align-items:flex-start; gap:40px; padding:6px 0; }
+.gs-callbtn-wrap{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+.gs-cap{ font-size:0.8rem; color:var(--ink-soft); font-weight:600; }
+.gs-round{ width:84px; height:84px; border:none; border-radius:50%; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:#fff; font-family:inherit; transition:transform 0.08s ease, box-shadow 0.08s ease; }
+.gs-round svg{ width:40%; height:40%; fill:currentColor; }
+.gs-round:focus-visible{ outline:3px solid var(--gold); outline-offset:4px; }
+.gs-round:disabled{ opacity:0.5; cursor:default; }
+
+/* The main button: a red disc with a cream ring, like a vintage telephone dial */
+.gs-dial{ width:200px; height:200px;
+  background: radial-gradient(circle at 36% 30%, #ff6b6b 0%, #e02424 52%, #a81414 100%);
+  box-shadow: 0 0 0 8px #f3ead9, 0 0 0 10px #8e1414, 0 12px 0 10px #6e0e0e, 0 22px 30px rgba(140,20,20,0.35), inset 0 6px 10px rgba(255,255,255,0.25), inset 0 -8px 14px rgba(0,0,0,0.25); }
+.gs-dial svg{ width:52px; height:52px; }
+.gs-dial:active:not(:disabled){ transform:translateY(6px); box-shadow: 0 0 0 8px #f3ead9, 0 0 0 10px #8e1414, 0 6px 0 10px #6e0e0e, 0 12px 18px rgba(140,20,20,0.3), inset 0 -4px 10px rgba(0,0,0,0.25); }
+.gs-dial-label{ font-weight:800; font-size:1.2rem; text-shadow:0 2px 0 rgba(0,0,0,0.25); }
+.gs-hub-talk{ display:flex; justify-content:center; padding:18px 0 8px; }
+.gs-mic-btn{ display:flex; align-items:center; gap:10px; padding:6px 18px 6px 6px; background:#fff; border:1px solid var(--line); border-radius:999px; cursor:pointer; font:inherit; color:var(--indigo); box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+.gs-mic-btn:focus-visible{ outline:3px solid var(--gold); outline-offset:3px; }
+.gs-mic-icon{ width:34px; height:34px; border-radius:50%; background:var(--sage); color:#fff; display:flex; align-items:center; justify-content:center; }
+.gs-mic-icon svg{ width:18px; height:18px; fill:currentColor; }
+.gs-mic-label{ font-weight:700; font-size:0.92rem; }
+
+.gs-mute{ background: radial-gradient(circle at 36% 30%, #6d6894, #2c2a3d 70%); box-shadow: 0 6px 0 #1c1a28, 0 10px 16px rgba(0,0,0,0.25); }
+.gs-mute.on{ background: radial-gradient(circle at 36% 30%, #f0c060, #9a6a14 75%); box-shadow: 0 6px 0 #6b4a0c, 0 10px 16px rgba(0,0,0,0.25); }
+.gs-hangup{ background: radial-gradient(circle at 36% 30%, #ff6b6b, #c81e1e 70%); box-shadow: 0 6px 0 #7a0f0f, 0 10px 16px rgba(150,20,20,0.3); }
+.gs-hangup svg{ transform: rotate(135deg); }
+.gs-mute:active, .gs-hangup:active{ transform:translateY(4px); }
+
+.gs-status{ text-align:center; font-size:0.84rem; color:var(--ink-soft); min-height:1.2em; }
+.gs-typeform{ display:flex; gap:8px; }
+.gs-typeform input{ flex:1; min-width:0; padding:10px 14px; border-radius:999px; border:1.5px solid var(--line); font:inherit; color:var(--ink); background:#fff; }
+.gs-typeform button{ padding:0 18px; border-radius:999px; border:none; background:var(--sage); color:#fff; font-weight:600; cursor:pointer; }
+.gs-typeform button:disabled{ opacity:0.5; cursor:default; }
+.gs-voice{ display:flex; gap:8px; align-items:center; justify-content:center; font-size:0.78rem; color:var(--ink-soft); flex-wrap:wrap; }
+.gs-voice select{ font:inherit; font-size:0.78rem; padding:3px 6px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); max-width:75%; }
+.gs-codebox{ background:#fff; border:1.5px solid var(--gold); border-radius:14px; padding:12px 14px; display:flex; flex-direction:column; gap:6px; }
+.gs-code-title{ font-weight:700; color:var(--indigo); font-size:0.92rem; }
+.gs-code-sub{ font-size:0.8rem; color:var(--ink-soft); line-height:1.4; margin-bottom:4px; }
+.gs-reset{ align-self:center; font-size:0.76rem; color:var(--ink-soft); background:transparent; border:1px solid var(--line); border-radius:999px; padding:4px 12px; cursor:pointer; }
+.review-card-title{ font-family: var(--serif); font-weight:700; color: var(--indigo); font-size:0.95rem; margin-bottom:6px; }
+body.dari-mode .review-card-title{ font-family: var(--dari); }
+.review-card-body{ font-size:0.82rem; color: var(--ink-soft); line-height:1.4; margin-bottom:12px; }
+
+.self-check-block{ background:#fff; border: 1.5px solid var(--line); border-radius: var(--radius-card); padding: 14px 16px; margin-top: 14px; }
+.self-check-title{ font-family: var(--serif); font-weight:700; color: var(--indigo); font-size:0.92rem; margin-bottom:4px; }
+body.dari-mode .self-check-title{ font-family: var(--dari); }
+.self-check-sub{ font-size:0.82rem; color: var(--ink-soft); margin-bottom:10px; }
+.self-check-words{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.self-check-word{ font-size:0.78rem; padding:4px 9px; border-radius: 999px; background: var(--line); color: var(--ink-soft); }
+.self-check-word.hit{ background: var(--sage); color:#fff; }
+.self-check-grammar{ font-size:0.82rem; color: var(--ink-soft); border-top:1px dashed var(--line); padding-top:10px; }
+
 .level-reward-note{
   margin-top: 14px; margin-bottom: 16px; font-size: 0.85rem; color: var(--ink-soft);
   background: var(--sand); border-radius: var(--radius-card); padding: 10px 14px;
@@ -668,6 +743,56 @@ const UI = {
     streakCaptionOnTrack:"5 active days this week — fill in every writing section for this week's units to lock in the $4 bonus.",
     streakCaptionProgress:(n)=> n+" of 5 active days this week — finish a unit today to keep the streak alive.",
     earnedForStreak:"Perfect week bonus",
+    reviewCardTitle:"🔁 Review time",
+    reviewCardBody:"Practice words from units you've already finished — a quick mixed review to help them stick.",
+    reviewStartBtn:"Start Review",
+    reviewHeaderKicker:"Review",
+    reviewHeaderTitle:"Mixed Vocabulary Review",
+    reviewDoneTitle:"Review complete!",
+    reviewDoneSub:(correct,total)=> correct+" / "+total+" correct.",
+    reviewBonusMsg:(amt)=> "🔁 +$"+amt+" review bonus!",
+    earnedForReview:"Review bonus",
+    speakTileName:"Speak with Grace",
+    speakKicker:"Speaking practice",
+    speakTitle:"Talk with Grace",
+    speakIntro:"Press Let's talk! and just speak. Grace listens, answers, and reads her answers aloud. Mute pauses your microphone, and End talk finishes the call. Practice only — it doesn't affect your rewards.",
+    speakGraceName:"Grace",
+    speakMicStart:"Tap to speak",
+    speakMicListening:"Listening… go ahead.",
+    speakTypePlaceholder:"…or type instead",
+    speakSend:"Send",
+    speakThinking:"Grace is thinking…",
+    speakNoMic:"Voice needs Chrome or Edge. You can still type to Grace.",
+    speakMicBlocked:"Microphone access is blocked. Allow it in your browser settings and try again.",
+    speakMicMissed:"Didn't catch that — tap to try again.",
+    speakErrNetwork:"Couldn't reach Grace. Check your connection and try again.",
+    speakErrCap:"Grace has reached today's practice limit for the class. Please try again tomorrow.",
+    speakErrDenied:"This practice isn't available right now.",
+    speakErrGeneric:"Grace couldn't answer just now. Try again in a moment.",
+    speakCodeTitle:"Class code",
+    speakCodeSub:"Ask your teacher for this term's class code. You only need to enter it once on this device.",
+    speakCodePlaceholder:"Class code",
+    speakCodeSave:"Save",
+    speakErrCode:"That class code didn't work. Check it with your teacher and try again.",
+    speakTalkBtn:"Let's talk!",
+    speakTalkAgain:"Talk",
+    speakMuteBtn:"Mute",
+    speakUnmuteBtn:"Unmute",
+    speakEndBtn:"End talk",
+    speakStatusIdle:"Press Let's talk! to start a conversation.",
+    speakStatusCall:"Connected. Go ahead, whenever you're ready.",
+    speakStatusMuted:"Muted. Tap Unmute to speak.",
+    speakStatusSpeaking:"Grace is speaking…",
+    speakStatusEnded:"Call ended. Press Talk to start again.",
+    speakVoiceLabel:"Grace's voice",
+    speakRestart:"Start over",
+    speakListen:"🔊 Listen",
+    speakStop:"⏸ Stop",
+    speakBackToUnit:"Back to unit",
+    backToTrail:"Back to Trail",
+    selfCheckTitle:"Self-check",
+    selfCheckUsedCount:(n,total)=> n+" of "+total+" target words used so far.",
+    selfCheckGrammarLabel:"Grammar to practice:",
   },
   fa: {
     trail: "مسیر", wallet: "پیسک", back: "بازگشت",
@@ -724,6 +849,56 @@ const UI = {
     streakCaptionOnTrack:"۵ روز فعال در این هفته — برای دریافت جایزه ۴ دالری، تمام بخش‌های نوشتاری واحدهای این هفته را پر کنید.",
     streakCaptionProgress:(n)=> n+" از ۵ روز فعال در این هفته — امروز یک واحد را تکمیل کنید تا تداوم ادامه یابد.",
     earnedForStreak:"جایزه هفته عالی",
+    reviewCardTitle:"🔁 زمان بازبینی",
+    reviewCardBody:"کلمات واحدهایی را که قبلاً تکمیل کرده‌اید تمرین کنید — یک بازبینی ترکیبی سریع تا در یادتان بماند.",
+    reviewStartBtn:"شروع بازبینی",
+    reviewHeaderKicker:"بازبینی",
+    reviewHeaderTitle:"بازبینی ترکیبی لغات",
+    reviewDoneTitle:"بازبینی تکمیل شد!",
+    reviewDoneSub:(correct,total)=> correct+" / "+total+" صحیح.",
+    reviewBonusMsg:(amt)=> "🔁 +$"+amt+" جایزه بازبینی!",
+    earnedForReview:"جایزه بازبینی",
+    speakTileName:"صحبت با گریس",
+    speakKicker:"تمرین صحبت کردن",
+    speakTitle:"صحبت با گریس",
+    speakIntro:"«بیایید صحبت کنیم!» را بزنید و فقط صحبت کنید. گریس می‌شنود، پاسخ می‌دهد و پاسخ‌هایش را با صدا می‌خواند. «بی‌صدا» میکروفون را متوقف می‌کند و «پایان گفتگو» تماس را تمام می‌کند. این فقط تمرین است و روی پاداش‌های شما تأثیری ندارد.",
+    speakGraceName:"گریس",
+    speakMicStart:"برای صحبت بزنید",
+    speakMicListening:"در حال شنیدن… بفرمایید.",
+    speakTypePlaceholder:"…یا به‌جایش بنویسید",
+    speakSend:"ارسال",
+    speakThinking:"گریس در حال فکر کردن است…",
+    speakNoMic:"ورودی صوتی به Chrome یا Edge نیاز دارد. همچنان می‌توانید بنویسید.",
+    speakMicBlocked:"دسترسی به میکروفون مسدود است. آن را در تنظیمات مرورگر فعال کنید و دوباره امتحان کنید.",
+    speakMicMissed:"متوجه نشدم — برای تلاش دوباره بزنید.",
+    speakErrNetwork:"به گریس دسترسی نیست. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.",
+    speakErrCap:"گریس به محدودیت تمرین امروز صنف رسیده است. لطفاً فردا دوباره امتحان کنید.",
+    speakErrDenied:"این تمرین فعلاً در دسترس نیست.",
+    speakErrGeneric:"گریس الان نتوانست پاسخ دهد. لحظه‌ای دیگر دوباره امتحان کنید.",
+    speakCodeTitle:"کد صنف",
+    speakCodeSub:"کد صنف این دوره را از معلم‌تان بپرسید. فقط یک‌بار باید آن را در این دستگاه وارد کنید.",
+    speakCodePlaceholder:"کد صنف",
+    speakCodeSave:"ذخیره",
+    speakErrCode:"کد صنف درست نبود. آن را از معلم‌تان بپرسید و دوباره امتحان کنید.",
+    speakTalkBtn:"بیایید صحبت کنیم!",
+    speakTalkAgain:"صحبت",
+    speakMuteBtn:"بی‌صدا",
+    speakUnmuteBtn:"صدادار",
+    speakEndBtn:"پایان گفتگو",
+    speakStatusIdle:"برای شروع گفتگو، «بیایید صحبت کنیم!» را بزنید.",
+    speakStatusCall:"متصل شدید. هر وقت آماده بودید صحبت کنید.",
+    speakStatusMuted:"بی‌صدا. برای صحبت «صدادار» را بزنید.",
+    speakStatusSpeaking:"گریس در حال صحبت است…",
+    speakStatusEnded:"گفتگو پایان یافت. برای شروع دوباره «صحبت» را بزنید.",
+    speakVoiceLabel:"صدای گریس",
+    speakRestart:"شروع دوباره",
+    speakListen:"🔊 گوش دادن",
+    speakStop:"⏸ توقف",
+    speakBackToUnit:"بازگشت به واحد",
+    backToTrail:"بازگشت به مسیر",
+    selfCheckTitle:"خودارزیابی",
+    selfCheckUsedCount:(n,total)=> "تا اکنون "+n+" از "+total+" کلمه هدف استفاده شده است.",
+    selfCheckGrammarLabel:"گرامر برای تمرین:",
   }
 };
 
@@ -30392,7 +30567,7 @@ function defaultState(){
   LEVELS.forEach(lv=> lv.units.forEach(u=>{
     unitProgress[u.id] = { flashcards:false, match:false, mcq:false, fillBlank:false, sentenceBuild:false, dictation:false, comprehension:false, writing:false, comprehension2:false, grammar:false, dialogue:false, exam:false };
   }));
-  return { unitProgress, unitsAwarded: [], wallet: { balance: 0, awards: [], cashouts: [] }, writingResponses: {}, examResponses: {}, migratedToUnitRewards: true, partsAwarded: [], unitScores: {} };
+  return { unitProgress, unitsAwarded: [], wallet: { balance: 0, awards: [], cashouts: [] }, writingResponses: {}, examResponses: {}, migratedToUnitRewards: true, partsAwarded: [], unitScores: {}, reviewsDone: [] };
 }
 
 // Storage layer: prefer Claude.ai's native window.storage (syncs to the account),
@@ -30455,6 +30630,7 @@ async function loadState(){
   if(!state.examResponses) state.examResponses = {};
   if(!state.partsAwarded) state.partsAwarded = [];
   if(!state.unitScores) state.unitScores = {};
+  if(!state.reviewsDone) state.reviewsDone = [];
   // state.levelsAwarded (old field) is left as-is if present — migrateToUnitRewards() reads it once, then it's no longer needed.
 }
 
@@ -30530,7 +30706,7 @@ function mergeStates(local, imported){
     }
   }
 
-  const awardKey = a => a.unit !== undefined ? "u"+a.unit : (a.milestone !== undefined ? "m"+a.milestone : (a.streakWeek !== undefined ? "s"+a.streakWeek : "l"+a.level));
+  const awardKey = a => a.unit !== undefined ? "u"+a.unit : (a.milestone !== undefined ? "m"+a.milestone : (a.streakWeek !== undefined ? "s"+a.streakWeek : (a.reviewMilestone !== undefined ? "r"+a.reviewMilestone : "l"+a.level)));
   const awardMap = new Map();
   [...(merged.wallet.awards||[]), ...((imported.wallet && imported.wallet.awards) || [])].forEach(a=>{
     if(!awardMap.has(awardKey(a))) awardMap.set(awardKey(a), a);
@@ -30943,8 +31119,112 @@ function renderEmphasis(text){
   return (text || "").replace(/\*(.+?)\*/g, "<b>$1</b>");
 }
 
+/* ---------------- Dari fade (Semester 3) ----------------
+   From Level 19 on (the third book-boundary stretch in MEDALS), a student has
+   enough English to try reading before leaning on the Dari gloss, so direct
+   Dari translations there switch to the same tap-to-reveal pattern already
+   used by the Dialogue activity and the Unit Hub summary — nothing is deleted,
+   she can always still see it, but it's no longer handed over automatically.
+   Levels 1-18 (Semesters 1 and 2) are completely unaffected. */
+function dariFaded(unit){
+  const found = findUnit(unit.id);
+  return !!found && found.level.id > MEDALS[1].uptoLevel;
+}
+// Shared click-wiring for every ".dialogue-tap-line" wrapper currently on screen —
+// same toggle-the-revealable-child behavior the Dialogue activity wires by hand,
+// pulled out here so the newly-faded activities (Fill the Blank, Build the
+// Sentence, both reading passages, Writing, Grammar Focus) can reuse it instead
+// of re-wiring click listeners in five separate places.
+function wireTapToReveal(main){
+  main.querySelectorAll(".dialogue-tap-line").forEach(line=>{
+    line.addEventListener("click", ()=>{
+      const rev = line.querySelector(".revealable");
+      if(rev) rev.classList.toggle("revealed");
+    });
+  });
+}
+
+/* ---------------- Writing self-check (no backend, no live model call) ----------------
+   The app has no server anywhere to safely hold an API key, so this is a plain
+   substring/stem check against the unit's own 8 vocab words rather than real
+   AI feedback — enough to show a student which target words she reached for,
+   without pretending to grade her writing. */
+function escapeRegex(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+function wordLikelyUsed(text, word){
+  const t = (text || "").toLowerCase();
+  const w = (word || "").toLowerCase().trim();
+  if(!w) return false;
+  if(w.includes(" ")){
+    const parts = w.split(" ").filter(Boolean);
+    if(parts.length === 2){
+      // allows a separable phrasal verb's object to sit between the two words
+      // ("turn off the lights" / "turn the lights off")
+      const re = new RegExp("\\b"+escapeRegex(parts[0])+"\\b[\\s\\w']*\\b"+escapeRegex(parts[1])+"[a-z]*\\b", "i");
+      return re.test(t);
+    }
+    return t.includes(w);
+  }
+  // crude stem match so a plural/inflected form ("recovered", "exhausting") still
+  // counts — not a precise grader, just a nudge about which words showed up.
+  const stem = escapeRegex(w.length > 4 ? w.slice(0, -1) : w);
+  return new RegExp("\\b"+stem+"[a-z]*\\b", "i").test(t);
+}
+
+/* ---------------- Spaced review ----------------
+   Nothing elsewhere in the app ever resurfaces a word once its unit is behind
+   a student, which is the single biggest retention gap a word met once and
+   never retrieved again is forgotten on a predictable curve regardless of how
+   well it was taught the first time. This adds a light, optional, non-gating
+   mixed-review quiz every REVIEW_INTERVAL completed units, pulling vocabulary
+   from every unit finished so far (not just the most recent one). */
+const REVIEW_INTERVAL = 5;
+const REVIEW_SET_SIZE = 10;
+const REVIEW_BONUS = 2;
+
+function completedUnitIds(){
+  const ids = new Set();
+  (state.wallet.awards || []).forEach(a => { if(a.unit !== undefined) ids.add(a.unit); });
+  return Array.from(ids);
+}
+// Returns the most recent REVIEW_INTERVAL-multiple milestone that hasn't had its
+// review session done yet, or null if none is due. Checking state.reviewsDone
+// keeps this idempotent — safe to call on every Trail render without ever
+// re-offering (or re-paying for) a review the student already finished.
+function reviewEligibleMilestone(){
+  const count = completedUnitIds().length;
+  if(count < REVIEW_INTERVAL) return null;
+  const milestone = Math.floor(count / REVIEW_INTERVAL) * REVIEW_INTERVAL;
+  if((state.reviewsDone || []).includes(milestone)) return null;
+  return milestone;
+}
+function buildReviewPool(){
+  const pool = [];
+  completedUnitIds().forEach(uid=>{
+    const found = findUnit(uid);
+    if(found) found.unit.vocab.forEach(v => pool.push(v));
+  });
+  const seen = new Set();
+  const deduped = pool.filter(v=>{
+    const key = v.en.toLowerCase();
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return shuffle(deduped).slice(0, REVIEW_SET_SIZE);
+}
+async function payReviewBonus(milestone){
+  if(!state.reviewsDone) state.reviewsDone = [];
+  if(state.reviewsDone.includes(milestone)) return;
+  state.reviewsDone.push(milestone);
+  state.wallet.balance += REVIEW_BONUS;
+  state.wallet.awards.push({ reviewMilestone: milestone, date: new Date().toISOString(), amount: REVIEW_BONUS });
+  await saveState();
+  updateWalletChip();
+}
+
 /* ---------------- Navigation / render ---------------- */
 function navTo(screen){
+  graceStopAll();
   currentScreen = screen;
   render();
   document.getElementById("main").scrollTop = 0;
@@ -30970,6 +31250,8 @@ function render(){
   if(currentScreen.name === "certificate") return renderCertificate(main, currentScreen.part);
   if(currentScreen.name === "unitReward") return renderUnitRewardDetail(main, currentScreen.unitId);
   if(currentScreen.name === "backup") return renderBackup(main);
+  if(currentScreen.name === "review") return renderReviewQuiz(main);
+  if(currentScreen.name === "speak") return renderSpeakGrace(main, currentScreen.unitId);
 }
 
 /* ---------------- Trail screen ----------------
@@ -31023,6 +31305,15 @@ function renderTrail(main){
     </div>
     <div class="streak-strip-caption">${captionText}</div>
   </div>`;
+
+  const reviewMilestone = reviewEligibleMilestone();
+  if(reviewMilestone !== null){
+    html += `<div class="review-card">
+      <div class="review-card-title">${L.reviewCardTitle}</div>
+      <div class="review-card-body">${L.reviewCardBody}</div>
+      <button class="btn btn-primary btn-full" id="startReviewBtn">${L.reviewStartBtn}</button>
+    </div>`;
+  }
 
   html += `<div class="semester-tabs">
     ${MEDALS.map((m, i)=>{
@@ -31086,6 +31377,11 @@ function renderTrail(main){
       render();
     });
   });
+
+  const startReviewBtn = document.getElementById("startReviewBtn");
+  if(startReviewBtn){
+    startReviewBtn.addEventListener("click", ()=> navTo({name:'review'}));
+  }
 }
 
 /* ---------------- Unit hub ---------------- */
@@ -31146,6 +31442,7 @@ function renderUnitHub(main, unitId){
         }).join("")}
       </div>
     </div>` : ``}
+    ${level.id <= MEDALS[0].uptoLevel ? gsHubButtonHtml(unit.id, L) : ``}
   </div>`;
 
   // Same tap-to-reveal pattern as the dialogue activity: English shows first, tap
@@ -31157,6 +31454,427 @@ function renderUnitHub(main, unitId){
       if(rev) rev.classList.toggle("revealed");
     });
   }
+}
+
+/* ---------------- Speak with Grace (gs-) ----------------
+   A voice call with Grace about the unit on screen, Semester 1 only. The round
+   red "Let's talk!" button starts the call and listening begins on its own.
+   Turns go back and forth: you speak, Grace replies, she reads the reply aloud,
+   then listening resumes. Mute pauses your microphone; End talk ends the call
+   and the button reads "Talk" again. The conversation is kept in memory for this
+   visit only: it isn't saved and doesn't affect rewards or progress. Replies come
+   from the Grace backend (grace-speaking-backend, a Cloudflare Worker) which holds
+   the Anthropic key. The class code is typed once per device and kept in that
+   browser only. */
+const GRACE_WORKER_URL = "https://grace-speaking-backend.momoz203050.workers.dev";
+const GRACE_OPENING_EN = "Hello! Let's practise this unit together. Tell me one thing you remember from today's lesson.";
+const GS_VOICE_PREFERRED = ["Google US English", "Samantha", "Ava", "Allison", "Karen", "Moira",
+  "Microsoft Aria Online (Natural) - English (United States)",
+  "Microsoft Jenny Online (Natural) - English (United States)"];
+let graceSpeak = null; // one conversation at a time; see renderSpeakGrace()
+
+function gsEsc(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function gsGetCode(){ try{ return localStorage.getItem("gs_class_code") || ""; }catch(e){ return ""; } }
+function gsSetCode(code){ try{ if(code) localStorage.setItem("gs_class_code", code); else localStorage.removeItem("gs_class_code"); }catch(e){} }
+
+function gsUnitPayload(unit){
+  return {
+    title: unit.title,
+    grammarEn: unit.grammarEn,
+    vocab: unit.vocab.map(v=>({ en: v.en, sentence: (v.sentence||"").replace(/\*/g,"") })),
+    grammar: { examples: ((unit.grammar && unit.grammar.examples) || []).map(e=>e.en) },
+    dialogueLines: unit.dialogue ? unit.dialogue.turns.map(tn=> tn.speakerEn + ": " + tn.en) : []
+  };
+}
+
+/* Voices. Chrome loads its voice list asynchronously, so the list is read each
+   time Grace speaks, and the picker refreshes when the list changes. A voice
+   chosen in the picker is remembered on this device. */
+function gsVoices(){
+  if(!window.speechSynthesis) return [];
+  return (window.speechSynthesis.getVoices() || []).filter(v=> v.lang && v.lang.indexOf("en") === 0);
+}
+function gsVoice(){
+  const list = gsVoices();
+  let saved = ""; try{ saved = localStorage.getItem("gs_voice") || ""; }catch(e){}
+  if(saved){ const v = list.find(x=>x.name === saved); if(v) return v; }
+  for(const name of GS_VOICE_PREFERRED){ const m = list.find(v=>v.name === name); if(m) return m; }
+  return list[0] || null;
+}
+function gsRenderVoicePicker(){
+  const row = document.getElementById("gsVoiceRow"); if(!row) return;
+  const list = gsVoices();
+  if(!list.length){ row.innerHTML = ""; return; }
+  const current = gsVoice();
+  row.innerHTML = `<label for="gsVoiceSel">${t().speakVoiceLabel}</label><select id="gsVoiceSel">${list.map(v=>`<option value="${gsEsc(v.name)}"${current && current.name === v.name ? " selected" : ""}>${gsEsc(v.name)}</option>`).join("")}</select>`;
+  document.getElementById("gsVoiceSel").addEventListener("change", (e)=>{ try{ localStorage.setItem("gs_voice", e.target.value); }catch(err){} });
+}
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged = ()=>{ gsRenderVoicePicker(); };
+}
+
+function gsHandsetIcon(){
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>`;
+}
+function gsMicIcon(muted){
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>${muted ? '<line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' : ""}</svg>`;
+}
+
+/* ---- Screen controls: the round button changes with the call state ---- */
+function gsRefreshControls(){
+  const s = graceSpeak; if(!s) return;
+  const L = t();
+  const key = [s.call, s.muted, s.ended, !!s.recognition].join("|");
+  const wrap = document.getElementById("gsControls");
+  if(wrap && s.controlsKey !== key){
+    s.controlsKey = key;
+    if(s.call){
+      wrap.innerHTML = `<div class="gs-call">
+        <div class="gs-callbtn-wrap">
+          <button class="gs-round gs-mute${s.muted ? " on" : ""}" id="gsMuteBtn" type="button" aria-pressed="${s.muted ? "true" : "false"}">${gsMicIcon(s.muted)}</button>
+          <span class="gs-cap">${s.muted ? L.speakUnmuteBtn : L.speakMuteBtn}</span>
+        </div>
+        <div class="gs-callbtn-wrap">
+          <button class="gs-round gs-hangup" id="gsEndBtn" type="button">${gsHandsetIcon()}</button>
+          <span class="gs-cap">${L.speakEndBtn}</span>
+        </div>
+      </div>`;
+      document.getElementById("gsMuteBtn").addEventListener("click", gsToggleMute);
+      document.getElementById("gsEndBtn").addEventListener("click", gsEndCall);
+    } else {
+      const label = s.ended ? L.speakTalkAgain : L.speakTalkBtn;
+      wrap.innerHTML = `<div class="gs-call">
+        <button class="gs-round gs-dial" id="gsStartBtn" type="button"${s.recognition ? "" : " disabled"}>${gsHandsetIcon()}<span class="gs-dial-label">${label}</span></button>
+      </div>`;
+      document.getElementById("gsStartBtn").addEventListener("click", gsStartCall);
+    }
+  }
+  const status = document.getElementById("gsStatus");
+  if(status){
+    let text;
+    if(!s.recognition) text = L.speakNoMic;
+    else if(s.errorText) text = s.errorText;
+    else if(s.call && s.muted) text = L.speakStatusMuted;
+    else if(s.call && s.speaking) text = L.speakStatusSpeaking;
+    else if(s.call && s.busy) text = L.speakThinking;
+    else if(s.call && s.listening) text = L.speakMicListening;
+    else if(s.call) text = L.speakStatusCall;
+    else text = s.ended ? L.speakStatusEnded : L.speakStatusIdle;
+    status.textContent = text;
+  }
+  const tr = document.getElementById("gsTranscript");
+  if(tr) tr.textContent = s.call ? (s.transcript || "") : "";
+  const input = document.getElementById("gsTypeInput");
+  const send = document.getElementById("gsSendBtn");
+  if(input) input.disabled = !!s.busy;
+  if(send) send.disabled = !!s.busy;
+}
+
+/* ---- Speech output (Grace's voice) ---- */
+function gsResetListenButtons(){
+  const L = t();
+  document.querySelectorAll(".gs-listen.speaking").forEach(b=>{ b.classList.remove("speaking"); b.textContent = L.speakListen; });
+}
+function gsStopSpeech(){
+  const s = graceSpeak;
+  if(s){ s.speakToken = (s.speakToken || 0) + 1; s.speaking = false; }
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  gsResetListenButtons();
+}
+function gsSpeak(text, btn){
+  const s = graceSpeak; const L = t();
+  if(btn && btn.classList.contains("speaking")){ gsStopSpeech(); gsResumeListen(); gsRefreshControls(); return; }
+  gsStopSpeech();
+  if(!window.speechSynthesis){ gsResumeListen(); return; }
+  const tok = s ? s.speakToken : 0;
+  if(s) s.speaking = true;
+  gsStopListen(); // don't let the microphone hear Grace
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "en-US"; u.rate = 0.95;
+  const v = gsVoice(); if(v) u.voice = v;
+  let finished = false;
+  let timer = null;
+  const done = ()=>{
+    if(finished) return;
+    if(s && tok !== s.speakToken) return;
+    finished = true;
+    clearTimeout(timer);
+    if(s) s.speaking = false;
+    if(btn){ btn.classList.remove("speaking"); btn.textContent = L.speakListen; }
+    gsResumeListen();
+    gsRefreshControls();
+  };
+  // Safety net: some browsers never fire onend, so resume after a generous guess.
+  timer = setTimeout(done, 3000 + text.length * 120);
+  u.onend = done; u.onerror = done;
+  if(btn){ btn.classList.add("speaking"); btn.textContent = L.speakStop; }
+  window.speechSynthesis.speak(u);
+  gsRefreshControls();
+}
+
+/* ---- Listening (the student's voice) ---- */
+function gsSetupMic(s){
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!Rec) return;
+  const rec = new Rec();
+  rec.lang = "en-US"; rec.interimResults = true; rec.continuous = false;
+  rec.onresult = (e)=>{
+    let interim = "", fin = "";
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      if(e.results[i].isFinal) fin += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    if(fin) s.finalText = (s.finalText + " " + fin).trim();
+    s.transcript = (s.finalText + " " + interim).trim();
+    gsRefreshControls();
+  };
+  rec.onend = ()=>{
+    s.listening = false;
+    const text = (s.finalText || s.transcript || "").trim();
+    s.finalText = ""; s.transcript = "";
+    if(text && s.call){ gsRefreshControls(); gsSend(text); return; } // gsSend resumes listening after Grace's reply
+    gsRefreshControls();
+    setTimeout(gsResumeListen, 250); // a pause ends a listening turn; start the next one
+  };
+  rec.onerror = (e)=>{
+    s.listening = false;
+    if(e.error === "not-allowed" || e.error === "service-not-allowed"){
+      s.call = false; s.muted = false; s.ended = true;
+      s.errorText = t().speakMicBlocked;
+    }
+    gsRefreshControls();
+  };
+  s.recognition = rec;
+}
+function gsListen(){
+  const s = graceSpeak;
+  if(!s || !s.recognition || !s.call || s.muted || s.busy || s.speaking || s.listening) return;
+  s.finalText = ""; s.transcript = "";
+  try{ s.recognition.start(); s.listening = true; }catch(e){ s.listening = false; }
+  gsRefreshControls();
+}
+function gsResumeListen(){ gsListen(); }
+function gsStopListen(){
+  const s = graceSpeak;
+  if(s && s.recognition && s.listening){ try{ s.recognition.stop(); }catch(e){} }
+}
+
+/* ---- Call controls ---- */
+function gsStartCall(){
+  const s = graceSpeak; if(!s || !s.recognition) return;
+  if(!gsGetCode()){ s.pendingCall = true; gsRenderCodeBox(); return; }
+  s.call = true; s.muted = false; s.ended = false; s.errorText = "";
+  gsRefreshControls();
+  gsListen();
+}
+function gsEndCall(){
+  const s = graceSpeak; if(!s) return;
+  s.call = false; s.muted = false; s.ended = true; s.pendingCall = false;
+  gsStopListen(); gsStopSpeech();
+  gsRefreshControls();
+}
+function gsToggleMute(){
+  const s = graceSpeak; if(!s || !s.call) return;
+  s.muted = !s.muted;
+  if(s.muted) gsStopListen(); else gsListen();
+  gsRefreshControls();
+}
+// Called by navTo() whenever the student leaves a screen: a call ends when you leave.
+function graceStopAll(){
+  const s = graceSpeak;
+  if(s && s.call){ s.call = false; s.muted = false; s.ended = true; }
+  gsStopListen();
+  gsStopSpeech();
+}
+
+/* ---- Class code ---- */
+function gsRenderCodeBox(){
+  const box = document.getElementById("gsCodeBox");
+  if(!box) return;
+  if(gsGetCode()){ box.innerHTML = ""; return; }
+  const L = t();
+  box.innerHTML = `<form class="gs-codebox" id="gsCodeForm">
+    <div class="gs-code-title">${L.speakCodeTitle}</div>
+    <div class="gs-code-sub">${L.speakCodeSub}</div>
+    <div class="gs-typeform">
+      <input id="gsCodeInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="${L.speakCodePlaceholder}">
+      <button type="submit">${L.speakCodeSave}</button>
+    </div>
+  </form>`;
+  document.getElementById("gsCodeForm").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const code = document.getElementById("gsCodeInput").value.trim();
+    if(!code) return;
+    gsSetCode(code);
+    gsRenderCodeBox();
+    const s = graceSpeak; if(!s) return;
+    if(s.pendingCall){ s.pendingCall = false; gsStartCall(); return; }
+    if(s.pendingText){ const p = s.pendingText; s.pendingText = null; gsSend(p); }
+  });
+  const input = document.getElementById("gsCodeInput");
+  if(input) input.focus();
+}
+
+/* ---- Chat log and sending ---- */
+function gsErrorText(err){
+  const L = t();
+  if(err && err.code === "daily_cap_reached") return L.speakErrCap;
+  if(err && (err.code === "origin_not_allowed" || err.code === "unauthorized")) return L.speakErrDenied;
+  if(err && err.code) return L.speakErrGeneric;
+  return L.speakErrNetwork;
+}
+function gsRenderLog(){
+  const s = graceSpeak; const el = document.getElementById("gsLog");
+  if(!s || !el) return;
+  const L = t();
+  el.innerHTML = s.log.map(m=>{
+    if(m.kind === "grace") return `<div class="gs-msg grace"><div class="gs-who"><span>${L.speakGraceName}</span><button class="gs-listen" type="button">${L.speakListen}</button></div>${gsEsc(m.text)}</div>`;
+    if(m.kind === "you") return `<div class="gs-msg you">${gsEsc(m.text)}</div>`;
+    if(m.kind === "error") return `<div class="gs-msg error">${gsEsc(m.text)}</div>`;
+    return `<div class="gs-msg note">${gsEsc(m.text)}</div>`;
+  }).join("");
+  const graces = s.log.filter(m=>m.kind === "grace");
+  el.querySelectorAll(".gs-listen").forEach((btn, i)=>{
+    btn.addEventListener("click", ()=> gsSpeak(graces[i].text, btn));
+  });
+  if(el.lastElementChild) el.lastElementChild.scrollIntoView({block:"end", behavior:"smooth"});
+}
+function gsSend(text){
+  const s = graceSpeak; if(!s || s.busy) return;
+  const L = t();
+  const code = gsGetCode();
+  if(!code){ s.pendingText = text; gsRenderCodeBox(); return; }
+  const unit = findUnit(s.unitId).unit;
+  s.busy = true;
+  s.log.push({kind:"you", text});
+  s.messages.push({role:"user", content:text});
+  s.log.push({kind:"note", text:L.speakThinking});
+  gsRenderLog(); gsRefreshControls();
+
+  fetch(GRACE_WORKER_URL, {
+    method: "POST",
+    headers: {"Content-Type":"application/json", "X-App-Key": code},
+    body: JSON.stringify({unit: gsUnitPayload(unit), messages: s.messages})
+  })
+  .then(async res=>{
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.reply){
+      const err = new Error("grace backend");
+      err.code = data.error || ("http_" + res.status);
+      throw err;
+    }
+    return data.reply;
+  })
+  .then(reply=>{
+    s.log = s.log.filter(m=>!(m.kind === "note" && m.text === L.speakThinking));
+    s.messages.push({role:"assistant", content:reply});
+    s.log.push({kind:"grace", text:reply});
+    gsRenderLog();
+    if(s.call){ // only speak the reply while a call is running
+      const btns = document.querySelectorAll(".gs-listen");
+      gsSpeak(reply, btns[btns.length - 1] || null);
+    }
+  })
+  .catch(err=>{
+    s.log = s.log.filter(m=>!(m.kind === "note" && m.text === L.speakThinking));
+    s.messages.pop();
+    if(err && err.code === "unauthorized"){
+      // The stored class code is wrong or has been changed: forget it and ask again.
+      gsSetCode("");
+      s.pendingText = null; s.pendingCall = false;
+      s.call = false; s.muted = false; s.ended = true;
+      s.errorText = L.speakErrCode;
+      gsRenderLog(); gsRenderCodeBox(); gsRefreshControls();
+      return;
+    }
+    s.log.push({kind:"error", text: gsErrorText(err)});
+    gsRenderLog();
+  })
+  .finally(()=>{
+    s.busy = false;
+    if(!s.speaking) gsResumeListen();
+    gsRefreshControls();
+  });
+}
+
+/* A small mic button under the unit's optional activities. Pressing it opens
+   the conversation and starts the call straight away. */
+function gsMicIcon(){
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>`;
+}
+function gsHubButtonHtml(unitId, L){
+  return `<div class="gs-hub-talk">
+    <button class="gs-mic-btn" type="button" onclick="gsHubTalk(${unitId})">
+      <span class="gs-mic-icon">${gsMicIcon()}</span>
+      <span class="gs-mic-label">${L.speakTileName}</span>
+    </button>
+  </div>`;
+}
+function gsHubTalk(unitId){
+  navTo({name:"speak", unitId, autostart:true});
+}
+
+function renderSpeakGrace(main, unitId){
+  const L = t();
+  const { unit, level } = findUnit(unitId);
+  if(level.id > MEDALS[0].uptoLevel){ navTo({name:"unit", unitId}); return; }
+  if(graceSpeak && graceSpeak.unitId !== unitId){ graceStopAll(); graceSpeak = null; }
+  if(!graceSpeak){
+    graceSpeak = {
+      unitId,
+      log: [{kind:"grace", text: GRACE_OPENING_EN}],
+      messages: [{role:"assistant", content: GRACE_OPENING_EN}],
+      busy: false, call: false, muted: false, ended: false,
+      listening: false, speaking: false, speakToken: 0,
+      recognition: null, transcript: "", finalText: "",
+      pendingText: null, pendingCall: false, errorText: "", controlsKey: null
+    };
+  }
+  const s = graceSpeak;
+  s.controlsKey = null; // this screen is new, so its buttons must be drawn again
+  main.innerHTML = `<div class="screen gs-screen">
+    <div class="back-row"><button class="back-btn" id="gsBackBtn">← ${L.speakBackToUnit}</button></div>
+    <div class="unit-header">
+      <div class="unit-kicker">${L.speakKicker}</div>
+      <div class="unit-title">${L.speakTitle}</div>
+    </div>
+    <div class="gs-intro">${L.speakIntro}</div>
+    <div id="gsCodeBox"></div>
+    <div class="gs-log" id="gsLog"></div>
+    <div class="gs-transcript" id="gsTranscript"></div>
+    <div id="gsControls"></div>
+    <div class="gs-status" id="gsStatus"></div>
+    <form class="gs-typeform" id="gsTypeForm">
+      <input id="gsTypeInput" type="text" placeholder="${L.speakTypePlaceholder}" autocomplete="off">
+      <button type="submit" id="gsSendBtn">${L.speakSend}</button>
+    </form>
+    <div class="gs-voice" id="gsVoiceRow"></div>
+    <button class="gs-reset" id="gsResetBtn" type="button">${L.speakRestart}</button>
+  </div>`;
+
+  document.getElementById("gsBackBtn").addEventListener("click", ()=> navTo({name:"unit", unitId}));
+  document.getElementById("gsResetBtn").addEventListener("click", ()=>{
+    graceStopAll();
+    graceSpeak = null;
+    navTo({name:"speak", unitId});
+  });
+  document.getElementById("gsTypeForm").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    const input = document.getElementById("gsTypeInput");
+    const text = input.value.trim();
+    if(!text || s.busy) return;
+    input.value = "";
+    gsSend(text);
+  });
+
+  if(!s.recognition) gsSetupMic(s);
+  gsRenderCodeBox();
+  gsRenderLog();
+  gsRefreshControls();
+  gsRenderVoicePicker();
+  // Opened from the unit's round button: start the call straight away.
+  if(currentScreen.autostart){ currentScreen.autostart = false; gsStartCall(); }
 }
 
 /* ---------------- Activity router ---------------- */
@@ -31415,12 +32133,14 @@ function renderFillBlank(main, unit){
     main.innerHTML = `<div class="screen">
       ${activityHeader(unit, "fillBlank")}
       <div class="progress-row"><div class="progress-count">${idx+1} ${L.of} ${items.length}</div><div class="score-pill">${correct} ✓</div></div>
-      <div class="fb-sentence lat">${parts.before}<span class="blank-tag">____</span>${parts.after}</div>
-      <div class="fb-dari">${v.sentenceDari}</div>
+      ${dariFaded(unit)
+        ? `<div class="dialogue-tap-line"><div class="fb-sentence lat">${parts.before}<span class="blank-tag">____</span>${parts.after}</div><div class="fb-dari revealable">${v.sentenceDari}</div></div><div class="passage-hint">${L.tapSummaryToTranslate}</div>`
+        : `<div class="fb-sentence lat">${parts.before}<span class="blank-tag">____</span>${parts.after}</div><div class="fb-dari">${v.sentenceDari}</div>`}
       <div class="fb-options" id="fbOpts">
         ${options.map(o=>`<button class="fb-opt lat" data-opt="${o}">${o}</button>`).join("")}
       </div>
     </div>`;
+    wireTapToReveal(main);
     document.querySelectorAll(".fb-opt").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         if(answered) return;
@@ -31465,7 +32185,9 @@ function renderSentenceBuild(main, unit){
     main.innerHTML = `<div class="screen">
       ${activityHeader(unit, "sentenceBuild")}
       <div class="progress-row"><div class="progress-count">${idx+1} ${L.of} ${items.length}</div><div class="score-pill">${correct} ✓</div></div>
-      <div class="sb-target-dari">${v.sentenceDari}</div>
+      ${dariFaded(unit)
+        ? `<div class="dialogue-tap-line"><div class="sb-target-dari revealable">${v.sentenceDari}</div></div><div class="passage-hint">${L.tapSummaryToTranslate}</div>`
+        : `<div class="sb-target-dari">${v.sentenceDari}</div>`}
       <div class="sb-answer" id="sbAnswer"></div>
       <div class="sb-bank" id="sbBank"></div>
       <div class="sb-feedback" id="sbFeedback"></div>
@@ -31474,6 +32196,7 @@ function renderSentenceBuild(main, unit){
         <button class="btn btn-primary" id="sbCheck">${L.checkAnswer}</button>
       </div>
     </div>`;
+    wireTapToReveal(main);
 
     const answerEl = document.getElementById("sbAnswer");
     const bankEl = document.getElementById("sbBank");
@@ -31992,12 +32715,23 @@ function renderComprehension(main, unit){
       ${activityHeader(unit, "comprehension")}
       <div class="passage-block">
         <div class="passage-listen-row">${speedRowHTML(`<button class="listen-fab" id="compListenBtn" title="${L.playAudio}">🔊</button>`)}</div>
-        <div class="passage-en lat">${c.textEn}</div>
-        <div class="passage-dari">${c.textDari}</div>
+        ${dariFaded(unit)
+          ? `<div class="dialogue-tap-line"><div class="passage-en lat">${c.textEn}</div><div class="passage-dari revealable">${c.textDari}</div></div>`
+          : `<div class="passage-en lat">${c.textEn}</div><div class="passage-dari">${c.textDari}</div>`}
       </div>
-      <div class="passage-hint">${L.readPassage}</div>
+      <div class="passage-hint">${dariFaded(unit) ? L.tapSummaryToTranslate+" "+L.readPassage : L.readPassage}</div>
       <div id="compQuestions">
-        ${c.questions.map((q, qi)=>`
+        ${c.questions.map((q, qi)=> dariFaded(unit) ? `
+          <div class="comp-question">
+            <div class="dialogue-tap-line">
+              <div class="comp-q-text lat">${qi+1}. ${q.q}</div>
+              <div class="comp-q-dari revealable">${q.qDari}</div>
+            </div>
+            <div class="comp-options" data-qi="${qi}">
+              ${q.options.map((opt, oi)=>`<button class="comp-opt lat" data-oi="${oi}">${opt}</button>`).join("")}
+            </div>
+          </div>
+        ` : `
           <div class="comp-question">
             <div class="comp-q-text lat">${qi+1}. ${q.q}</div>
             <div class="comp-q-dari">${q.qDari}</div>
@@ -32017,6 +32751,7 @@ function renderComprehension(main, unit){
       run: ()=> speak(c.textEn, { clipPath: `audio/${unit.id}/comprehension.mp3` }),
     });
     wireSpeedButtons(main);
+    wireTapToReveal(main);
 
     document.querySelectorAll(".comp-options").forEach(group=>{
       const qi = parseInt(group.dataset.qi, 10);
@@ -32062,13 +32797,15 @@ function renderWriting(main, unit){
     ${activityHeader(unit, "writing")}
     <div class="passage-block">
       <div class="passage-listen-row">${speedRowHTML(`<button class="listen-fab" id="writingListenBtn" title="${L.playAudio}">🔊</button>`)}</div>
-      <div class="passage-en lat">${w.promptEn}</div>
-      <div class="passage-dari">${w.promptDari}</div>
+      ${dariFaded(unit)
+        ? `<div class="dialogue-tap-line"><div class="passage-en lat">${w.promptEn}</div><div class="passage-dari revealable">${w.promptDari}</div></div>`
+        : `<div class="passage-en lat">${w.promptEn}</div><div class="passage-dari">${w.promptDari}</div>`}
     </div>
     <div class="passage-hint">${L.writingIntro}</div>
     <textarea class="dict-input writing-textarea" id="writingInput" rows="6" placeholder="${L.yourResponse}">${existing}</textarea>
     <button class="btn btn-primary btn-full" id="writingSaveBtn">${L.savePrompt}</button>
     <div id="writingSavedNote" class="saved-note ${existing ? '' : 'hidden'}">${existing ? L.previouslySaved : ''}</div>
+    <div id="writingSelfCheck"></div>
   </div>`;
 
   wireSpeakToggle(document.getElementById("writingListenBtn"), {
@@ -32076,6 +32813,28 @@ function renderWriting(main, unit){
     run: ()=> speak(w.promptEn, { clipPath: `audio/${unit.id}/writing.mp3` }),
   });
   wireSpeedButtons(main);
+  wireTapToReveal(main);
+
+  // No-backend self-check: shows which of this unit's 8 target words turned up
+  // in what she wrote, plus a reminder of the grammar point — not a grade,
+  // just visibility into her own output, which the app previously threw away
+  // entirely once the text was saved.
+  function renderSelfCheck(text){
+    const box = document.getElementById("writingSelfCheck");
+    if(!box) return;
+    if(!text.trim()){ box.innerHTML = ""; return; }
+    const hits = unit.vocab.map(v => ({ word: v.en, used: wordLikelyUsed(text, v.en) }));
+    const usedCount = hits.filter(h=>h.used).length;
+    box.innerHTML = `<div class="self-check-block">
+      <div class="self-check-title">${L.selfCheckTitle}</div>
+      <div class="self-check-sub">${L.selfCheckUsedCount(usedCount, hits.length)}</div>
+      <div class="self-check-words">
+        ${hits.map(h=>`<span class="self-check-word ${h.used?'hit':''} lat">${h.used?'✓':'·'} ${h.word}</span>`).join("")}
+      </div>
+      <div class="self-check-grammar"><strong>${L.selfCheckGrammarLabel}</strong> <span class="lat">${unit.grammarEn || ''}</span></div>
+    </div>`;
+  }
+  if(existing.trim()) renderSelfCheck(existing);
 
   document.getElementById("writingSaveBtn").addEventListener("click", async ()=>{
     const text = document.getElementById("writingInput").value.trim();
@@ -32083,6 +32842,7 @@ function renderWriting(main, unit){
     state.writingResponses[unit.id] = text;
     await markBonusAttempted(unit, "writing");
     showToast(L.saved);
+    renderSelfCheck(text);
   });
 }
 
@@ -32100,12 +32860,23 @@ function renderComprehension2(main, unit){
       ${activityHeader(unit, "comprehension2")}
       <div class="passage-block">
         <div class="passage-listen-row">${speedRowHTML(`<button class="listen-fab" id="comp2ListenBtn" title="${L.playAudio}">🔊</button>`)}</div>
-        <div class="passage-en lat">${c.textEn}</div>
-        <div class="passage-dari">${c.textDari}</div>
+        ${dariFaded(unit)
+          ? `<div class="dialogue-tap-line"><div class="passage-en lat">${c.textEn}</div><div class="passage-dari revealable">${c.textDari}</div></div>`
+          : `<div class="passage-en lat">${c.textEn}</div><div class="passage-dari">${c.textDari}</div>`}
       </div>
-      <div class="passage-hint">${L.readPassage}</div>
+      <div class="passage-hint">${dariFaded(unit) ? L.tapSummaryToTranslate+" "+L.readPassage : L.readPassage}</div>
       <div id="compQuestions2">
-        ${c.questions.map((q, qi)=>`
+        ${c.questions.map((q, qi)=> dariFaded(unit) ? `
+          <div class="comp-question">
+            <div class="dialogue-tap-line">
+              <div class="comp-q-text lat">${qi+1}. ${q.q}</div>
+              <div class="comp-q-dari revealable">${q.qDari}</div>
+            </div>
+            <div class="comp-options" data-qi="${qi}">
+              ${q.options.map((opt, oi)=>`<button class="comp-opt lat" data-oi="${oi}">${opt}</button>`).join("")}
+            </div>
+          </div>
+        ` : `
           <div class="comp-question">
             <div class="comp-q-text lat">${qi+1}. ${q.q}</div>
             <div class="comp-q-dari">${q.qDari}</div>
@@ -32125,6 +32896,7 @@ function renderComprehension2(main, unit){
       run: ()=> speak(c.textEn, { clipPath: `audio/${unit.id}/comprehension2.mp3` }),
     });
     wireSpeedButtons(main);
+    wireTapToReveal(main);
 
     document.querySelectorAll("#compQuestions2 .comp-options").forEach(group=>{
       const qi = parseInt(group.dataset.qi, 10);
@@ -32276,12 +33048,20 @@ function renderGrammarBonus(main, unit){
       ${activityHeader(unit, "grammar")}
       <div class="passage-block">
         <div class="passage-listen-row">${speedRowHTML(`<button class="listen-fab" id="grammarListenBtn" title="${L.playAudio}">🔊</button>`)}</div>
-        <div class="passage-en lat">${g.explanationEn}</div>
-        <div class="passage-dari">${g.explanationDari}</div>
+        ${dariFaded(unit)
+          ? `<div class="dialogue-tap-line"><div class="passage-en lat">${g.explanationEn}</div><div class="passage-dari revealable">${g.explanationDari}</div></div>`
+          : `<div class="passage-en lat">${g.explanationEn}</div><div class="passage-dari">${g.explanationDari}</div>`}
       </div>
-      <div class="passage-hint">${L.grammarIntro}</div>
+      <div class="passage-hint">${dariFaded(unit) ? L.tapSummaryToTranslate+" "+L.grammarIntro : L.grammarIntro}</div>
       <div id="grammarExamples">
-        ${g.examples.map((ex, exi)=>`
+        ${g.examples.map((ex, exi)=> dariFaded(unit) ? `
+          <div class="comp-question">
+            <div class="dialogue-tap-line">
+              <div class="comp-q-text has-audio lat">${ex.en}${speedRowHTML(`<button class="listen-fab-inline" data-ex-idx="${exi}" title="${L.playAudio}">🔊</button>`, { inline: true })}</div>
+              <div class="comp-q-dari revealable">${ex.dari}</div>
+            </div>
+          </div>
+        ` : `
           <div class="comp-question">
             <div class="comp-q-text has-audio lat">${ex.en}${speedRowHTML(`<button class="listen-fab-inline" data-ex-idx="${exi}" title="${L.playAudio}">🔊</button>`, { inline: true })}</div>
             <div class="comp-q-dari">${ex.dari}</div>
@@ -32295,6 +33075,7 @@ function renderGrammarBonus(main, unit){
       isIcon: true, activeLabel: "⏹",
       run: ()=> speak(g.explanationEn, { clipPath: `audio/${unit.id}/grammar-explanation.mp3` }),
     });
+    wireTapToReveal(main);
     document.querySelectorAll("#grammarExamples .listen-fab-inline").forEach(btn=>{
       const exIdx = btn.dataset.exIdx;
       wireSpeakToggle(btn, {
@@ -32384,6 +33165,75 @@ function renderDialogue(main, unit){
   draw();
 }
 
+/* ---------------- Spaced review quiz (optional, non-gating) ----------------
+   Same MCQ shape as renderMCQ, but the word pool is drawn from every unit
+   completed so far (see buildReviewPool()) instead of just the current unit —
+   this is the only place in the app that ever asks about a word again after
+   its own unit is finished. Reached only from the Trail's review card
+   (reviewEligibleMilestone()), never gates anything, and pays REVIEW_BONUS
+   once per milestone via payReviewBonus(). */
+function renderReviewQuiz(main){
+  const L = t();
+  const milestone = reviewEligibleMilestone();
+  const items = buildReviewPool();
+  if(milestone === null || items.length === 0){
+    // Nothing to review right now (e.g. already done, or not enough history yet) —
+    // don't strand the student on a broken screen.
+    navTo({name:'trail'});
+    return;
+  }
+  let idx = 0, correct = 0, answered = false;
+
+  function draw(){
+    const v = items[idx];
+    const distractors = shuffle(items.filter(x=>x.en!==v.en)).slice(0,3).map(x=>x.dari);
+    const options = shuffle([v.dari, ...distractors]);
+    main.innerHTML = `<div class="screen">
+      <div class="back-row"><button class="back-btn" onclick="navTo({name:'trail'})">← ${L.back}</button></div>
+      <div class="unit-header">
+        <div class="unit-kicker">${L.reviewHeaderKicker}</div>
+        <div class="unit-title">${L.reviewHeaderTitle}</div>
+      </div>
+      <div class="progress-row"><div class="progress-count">${idx+1} ${L.of} ${items.length}</div><div class="score-pill">${correct} ✓</div></div>
+      <div class="mcq-question">${lang==='en' ? 'What does <span class="lat">"'+v.en+'"</span> mean?' : '<span class="lat">"'+v.en+'"</span> به چه معناست؟'}</div>
+      <div class="mcq-options" id="mcqOpts">
+        ${options.map(o=>`<button class="mcq-opt" data-opt="${o}">${o}</button>`).join("")}
+      </div>
+    </div>`;
+    document.querySelectorAll(".mcq-opt").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        if(answered) return;
+        answered = true;
+        const chosen = btn.dataset.opt;
+        document.querySelectorAll(".mcq-opt").forEach(b=>{
+          if(b.dataset.opt === v.dari) b.classList.add("correct");
+          else if(b === btn) b.classList.add("wrong");
+        });
+        if(chosen === v.dari) correct++;
+        setTimeout(()=>{
+          answered = false;
+          if(idx < items.length-1){ idx++; draw(); }
+          else { finish(); }
+        }, 650);
+      });
+    });
+  }
+
+  async function finish(){
+    await payReviewBonus(milestone);
+    main.innerHTML = `<div class="screen">
+      <div class="result-hero">
+        <div class="result-score">${Math.round((correct/items.length)*100)}%</div>
+        <div class="result-label">${correct} / ${items.length}</div>
+      </div>
+      <div class="result-msg">🔁 ${L.reviewDoneTitle}</div>
+      <div class="result-msg">${L.reviewBonusMsg(REVIEW_BONUS)}</div>
+      <button class="btn btn-primary btn-full" onclick="navTo({name:'trail'})">${L.backToTrail}</button>
+    </div>`;
+  }
+  draw();
+}
+
 /* ---------------- Wallet ---------------- */
 function renderWallet(main){
   const L = t();
@@ -32422,6 +33272,9 @@ function renderWallet(main){
         }
         if(a.streakWeek !== undefined){
           return `<div class="history-row"><span>🔥 ${L.earnedForStreak}</span><span class="history-amt plus">+$${a.amount}</span></div>`;
+        }
+        if(a.reviewMilestone !== undefined){
+          return `<div class="history-row"><span>🔁 ${L.earnedForReview}</span><span class="history-amt plus">+$${a.amount}</span></div>`;
         }
         return `<div class="history-row"><span>${L.earnedForLevel(a.level)}</span><span class="history-amt plus">+$${a.amount}</span></div>`;
       }).join("") : `<div class="empty-note">${L.noEarnings}</div>`}
