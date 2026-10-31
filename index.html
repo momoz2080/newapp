@@ -31777,6 +31777,7 @@ async function gsSpeakGoogle(text, tok, done){
   const buf = ctx.createBuffer(1, n, rate);
   const ch = buf.getChannelData(0);
   for(let i = 0; i < n; i++) ch[i] = i16[i] / 32768;
+  gsFadeEnds(ch, rate); // a short fade at both ends, so the clip doesn't start or stop with a click
   const src = ctx.createBufferSource();
   src.buffer = buf; src.connect(ctx.destination);
   let finished = false;
@@ -31906,7 +31907,15 @@ function gsListenA(s){
   catch(e){ /* already listening */ }
   gsRefreshControls();
 }
-function gsResumeA(s){ if(s && s.call && !s.busy && !s.speaking) gsListenA(s); }
+// Listening starts again a moment after Grace's voice ends, so the two don't overlap.
+function gsResumeA(s){
+  if(!s) return;
+  setTimeout(()=>{ if(s.call && !s.busy && !s.speaking) gsListenA(s); }, 350);
+}
+function gsFadeEnds(ch, rate){
+  const f = Math.min(Math.round(rate * 0.015), ch.length >> 1);
+  for(let i = 0; i < f; i++){ ch[i] *= i / f; ch[ch.length - 1 - i] *= i / f; }
+}
 // Called by navTo() whenever the student leaves the screen: nothing keeps listening.
 function graceStopAll(){
   const s = graceSpeak;
