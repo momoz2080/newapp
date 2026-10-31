@@ -31757,27 +31757,14 @@ async function gsSpeakGoogle(text, tok, done){
   const ctx = gsCtxGet();
   if(!data || !ctx){ gsSpeakBrowser(text, tok, done); return; }
   const m = /rate=(\d+)/.exec(data.mimeType || "");
-  let rate = m ? parseInt(m[1], 10) : 24000;
-  let u8 = gsB64Decode(data.audio);
-  // Some replies arrive wrapped in a WAV file. Read its rate and skip its header, so no click is played.
-  if(u8.length > 44 && u8[0] === 0x52 && u8[1] === 0x49 && u8[2] === 0x46 && u8[3] === 0x46){
-    const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
-    rate = dv.getUint32(24, true);
-    let off = 12;
-    while(off + 8 <= u8.length){
-      const id = String.fromCharCode(u8[off], u8[off + 1], u8[off + 2], u8[off + 3]);
-      if(id === "data"){ off += 8; break; }
-      off += 8 + dv.getUint32(off + 4, true);
-    }
-    u8 = u8.subarray(off);
-  }
+  const rate = m ? parseInt(m[1], 10) : 24000;
+  const u8 = gsB64Decode(data.audio);
   const n = u8.length >> 1;
   const i16 = new Int16Array(n);
   for(let i = 0; i < n; i++) i16[i] = u8[2 * i] | (u8[2 * i + 1] << 8);
   const buf = ctx.createBuffer(1, n, rate);
   const ch = buf.getChannelData(0);
   for(let i = 0; i < n; i++) ch[i] = i16[i] / 32768;
-  gsFadeEnds(ch, rate); // a short fade at both ends, so the clip doesn't start or stop with a click
   const src = ctx.createBufferSource();
   src.buffer = buf; src.connect(ctx.destination);
   let finished = false;
@@ -31907,15 +31894,7 @@ function gsListenA(s){
   catch(e){ /* already listening */ }
   gsRefreshControls();
 }
-// Listening starts again a moment after Grace's voice ends, so the two don't overlap.
-function gsResumeA(s){
-  if(!s) return;
-  setTimeout(()=>{ if(s.call && !s.busy && !s.speaking) gsListenA(s); }, 350);
-}
-function gsFadeEnds(ch, rate){
-  const f = Math.min(Math.round(rate * 0.015), ch.length >> 1);
-  for(let i = 0; i < f; i++){ ch[i] *= i / f; ch[ch.length - 1 - i] *= i / f; }
-}
+function gsResumeA(s){ if(s && s.call && !s.busy && !s.speaking) gsListenA(s); }
 // Called by navTo() whenever the student leaves the screen: nothing keeps listening.
 function graceStopAll(){
   const s = graceSpeak;
